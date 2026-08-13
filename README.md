@@ -19,12 +19,13 @@ UnityProject/               Unity 6 游戏项目
 ## 分支策略
 
 - `main`：可运行的游戏开发主线，承载玩法、场景、美术、配置和业务代码。
-- `feature/<name>`：从 `main` 创建的单一功能分支，完成后通过 Pull Request 合并。
-- `framework/<name>`：只放通用 EF 改动；验证通过后提交 Pull Request 到 EF 的 `main`。
-- `framework`：EF 发布同步分支，保持与 EF `main` 的共同历史，不混入游戏玩法内容。
-- `ef`：EF 上游远程，只用于获取框架更新，不直接在其远程分支上开发。
+- `feature/<name>`：从 `main` 创建的单一功能分支，完成后通过 Pull Request 合并到 `main`。
+- `framework`：与 EF 共享提交历史的同步分支。只放可回灌到 EF 的通用改动。
+- `ef`：EF 上游远程。回灌时把分支推到这里，不要推游戏仓库的 `origin`。
 
-游戏代码与 EF 改动必须分开提交。一个提交只表达一个可回滚意图；框架升级先在独立分支验证，再合并到 `main`。
+游戏代码与 EF 改动必须分开提交。一个提交只表达一个可回滚意图。
+
+可回灌到 EF 的默认范围是 `UnityProject/Assets/EF/`。`GameScripts`、玩法资源、项目配置表、私有 CDN 地址不要带回 EF。
 
 ## 开始使用
 
@@ -50,19 +51,45 @@ Unity 未打开时，可通过 Unity Test Framework 的 batchmode 执行 EditMod
 
 ## EF 同步流程
 
+### 从 EF 拉更新
+
 ```powershell
-# 获取 EF 上游更新
 git fetch ef
 git switch framework
 git merge --ff-only ef/main
-
-# 将框架更新合并到游戏主线并验证
 git switch main
 git merge --no-ff framework
-
-# 将通用框架改动发布回项目仓库，随后创建到 EF 的 Pull Request
-git switch framework/<name>
-git push origin framework/<name>
 ```
 
-向 EF 提交前，必须确认改动不依赖本项目玩法、资源、配置或私有服务，并完成 Unity 编译与相关测试。
+### 把 EF 改动推回上游
+
+本仓库不是 EF 的 fork。不能从 `origin` 的功能分支直接给 EF 开 Pull Request。
+必须先落到 `framework`（或从它拉出的分支），再推到 `ef` 远程。
+
+优先在 `framework` 上改框架，验证后再合并进 `main`：
+
+```powershell
+git switch framework
+git switch -c framework/event-lifecycle
+# 只改 UnityProject/Assets/EF 等通用框架文件
+git add UnityProject/Assets/EF
+git commit -m "fix: tighten event channel lifecycle"
+git push -u ef framework/event-lifecycle
+gh pr create --repo mufengbufeng/EF --head framework/event-lifecycle --base main
+
+git switch main
+git merge --no-ff framework/event-lifecycle
+```
+
+如果已经在 `main` 上改完了 EF 文件，再抽到 `framework`：
+
+```powershell
+git switch framework
+git restore --source=main --staged --worktree -- UnityProject/Assets/EF
+git status
+git commit -m "fix: tighten event channel lifecycle"
+git push -u ef HEAD:refs/heads/framework/event-lifecycle
+gh pr create --repo mufengbufeng/EF --head framework/event-lifecycle --base main
+```
+
+向 EF 提交前确认：不依赖本项目玩法、资源、配置或私有服务，并完成 Unity 编译与相关测试。
