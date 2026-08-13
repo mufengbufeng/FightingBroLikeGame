@@ -1,30 +1,30 @@
-# EasyFramework
+# FightingBroLikeGame
 
-EasyFramework（EF）是一个面向 Unity 6 项目的模块化游戏框架模板。当前版本从实际项目中回收并整理了经过验证的框架能力，同时移除了具体玩法、界面、美术、音频、配置数据和构建产物。
+基于 [EasyFramework (EF)](https://github.com/mufengbufeng/EF) 的 Unity 游戏项目。
 
-## 主要能力
-
-- `ModuleSystem` 管理 Resource、Event、UI、Sound、Timer、ObjectPool、Fsm、Procedure、Save、Model、Entity 等模块。
-- HybridCLR 热更新与可关闭热更新的本地 AOT 启动模式。
-- YooAsset 资源初始化、版本更新、下载和多平台资源模式。
-- W-Framework UGUI 窗口生命周期、焦点和强类型组件绑定。
-- Luban 配置生成目录、模板、Windows/Linux/macOS 脚本与最小 `item` 示例表。
-- EditMode/PlayMode 框架测试骨架。
-- 微信小游戏转换、CDN 本地调试和后台下载适配。
-
-## 目录
+## 项目结构
 
 ```text
 Configs/                    Luban 配置定义、数据表和生成脚本
 LocalCDN/                   本地 CDN 输出目录，仅保留说明文件
 Tools/                      Luban 与资源调试工具
-UnityProject/
-  Assets/EF/                EF 运行时与编辑器模块
-  Assets/GameScripts/       AOT/HotFix 最小启动骨架和框架测试
-  Assets/Scenes/Entry.unity 最小入口场景
-  Packages/                 Unity 包依赖及随仓库维护的本地包
-  ProjectSettings/          Unity 6000.3.12f1 项目设置
+UnityProject/               Unity 6 游戏项目
 ```
+
+## 开发环境
+
+- Unity `6000.3.12f1`
+- EF 框架来源：`ef/main`
+
+## 分支策略
+
+- `main`：可运行的游戏开发主线，承载玩法、场景、美术、配置和业务代码。
+- `feature/<name>`：从 `main` 创建的单一功能分支，完成后通过 Pull Request 合并。
+- `framework/<name>`：只放通用 EF 改动；验证通过后提交 Pull Request 到 EF 的 `main`。
+- `framework`：EF 发布同步分支，保持与 EF `main` 的共同历史，不混入游戏玩法内容。
+- `ef`：EF 上游远程，只用于获取框架更新，不直接在其远程分支上开发。
+
+游戏代码与 EF 改动必须分开提交。一个提交只表达一个可回滚意图；框架升级先在独立分支验证，再合并到 `main`。
 
 ## 开始使用
 
@@ -47,3 +47,22 @@ Unity 已打开时优先使用 AIBridge：
 ```
 
 Unity 未打开时，可通过 Unity Test Framework 的 batchmode 执行 EditMode 测试。不要在同一项目已被编辑器打开时启动第二个 Unity 实例。
+
+## EF 同步流程
+
+```powershell
+# 获取 EF 上游更新
+git fetch ef
+git switch framework
+git merge --ff-only ef/main
+
+# 将框架更新合并到游戏主线并验证
+git switch main
+git merge --no-ff framework
+
+# 将通用框架改动发布回项目仓库，随后创建到 EF 的 Pull Request
+git switch framework/<name>
+git push origin framework/<name>
+```
+
+向 EF 提交前，必须确认改动不依赖本项目玩法、资源、配置或私有服务，并完成 Unity 编译与相关测试。
