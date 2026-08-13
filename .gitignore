@@ -1,0 +1,66 @@
+# Unity
+UnityProject/Library/
+UnityProject/HybridCLRData/
+UnityProject/Logs/
+UnityProject/Temp/
+UnityProject/Bundles/
+UnityProject/yoo/
+UnityProject/Assets/AssetRaw/DLL/
+UnityProject/Assets/HybridCLRGenerate/
+UnityProject/Assets/StreamingAssets/yoo/
+UnityProject/GeneratedImages/
+UnityProject/TextToolDatas/
+Build/
+LocalCDN/*
+!LocalCDN/README.md
+
+# IDE
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userprefs
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local env / generated artifacts
+.env
+*.env
+UnityProject/.env
+UnityProject/output/
+UnityProject/harness-workspace/
+UnityProject/.codex/
+UnityProject/.aibridge/
+UnityProject/.understand-anything/
+UnityProject/.mcp.json
+UnityProject/testlog.txt
+UnityProject/TestResults/
+UnityProject/Assets/Resources/PerformanceTestRunInfo.json*
+UnityProject/Assets/Resources/PerformanceTestRunSettings.json*
+
+# Claude Code
+.claude/
+
+# Serena
+.serena/
+
+# MemPalace / harness
+.mempalace/
+.mempalace_local/
+.mcp_data/
+.codedb-mcp/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OpenSpec local
+openspec/local/
+
+# Local Git client cache
+ugit/

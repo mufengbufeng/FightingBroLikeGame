@@ -1,0 +1,5 @@
+<linker>
+  <assembly fullname="EF.Monetization.Wechat">
+    <type fullname="EF.Monetization.Wechat.WechatCommercialProvider" preserve="all" />
+  </assembly>
+</linker>

@@ -1,0 +1,21 @@
+{
+    "name": "GameLogic",
+    "rootNamespace": "",
+    "references": [
+        "GUID:901fdfb0b8ece28439b245be1b1f16b0",
+        "GUID:e34a5702dd353724aa315fb8011f08c3",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "Unity.ugui",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <assembly fullname="YooAsset">
+    <type fullname="YooAsset.WebServerFileSystem" preserve="all" />
+    <type fullname="YooAsset.WebNetworkFileSystem" preserve="all" />
+  </assembly>
+  <assembly fullname="YooAsset.MiniGame">
+    <type fullname="EF.MiniGame.WechatMiniGameFileSystem" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.Physics2DModule">
+    <type fullname="UnityEngine.Collider2D" preserve="all" />
+  </assembly>
+</linker>

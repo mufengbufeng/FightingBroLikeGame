@@ -1,0 +1,95 @@
+# GameLogic Tests
+
+本目录托管框架层自动化测试，分为 EditMode 与 PlayMode 两层。
+
+## 目录结构
+
+```
+Tests/
+├── EditMode/                 GameLogic.Tests.EditMode.asmdef（Editor-only）
+│   ├── Framework/            纯逻辑模块的单元测试 fixture
+│   └── *.cs
+└── PlayMode/                 GameLogic.Tests.PlayMode.asmdef（UNITY_INCLUDE_TESTS 约束）
+    ├── Framework/
+    │   └── PlayModeTestBase.cs   PlayMode 通用基类
+    ├── BootstrapTest.cs          基类与隔离机制冒烟
+    └── UniTaskFrameDrivenTests.cs
+```
+
+## EditMode 测试
+
+针对纯逻辑模块（FSM / Model / ObjectPool / EventChannel / Save / W-Framework UI / DataDriven 等）编写。`asmdef` 配置：`includePlatforms=["Editor"]` + `defineConstraints=["UNITY_INCLUDE_TESTS"]`，全部使用 mock，不进行任何 IO / 资源加载，运行极快。
+
+触发方式：
+
+- Unity 编辑器：`Window > General > Test Runner > EditMode` 标签 → Run All
+- 命令行（Unity 未打开）：`"<UnityEditorPath>" -batchmode -quit -runTests -testPlatform EditMode -testResults TestResults/editmode-results.xml -projectPath .`
+
+## PlayMode 测试
+
+覆盖 EF 框架运行时基础设施在真实 PlayerLoop 下的可观察契约：
+
+| 模块 | Fixture | 覆盖契约 |
+| --- | --- | --- |
+| Bootstrap | `BootstrapTest.cs` | 基类隔离 / ModuleSystem 干净启动 |
+| UniTask + Timer | `UniTaskFrameDrivenTests.cs` | UniTask.Yield 跨帧 / UniTask.Delay 真实时间 / TimerManager 真实帧驱动 |
+
+### asmdef 关键约束
+
+`Assets/GameScripts/HotFix/GameLogic/Tests/PlayMode/GameLogic.Tests.PlayMode.asmdef`：
+
+- `includePlatforms`: `[]`（**所有平台**，不能限制为 `["Editor"]`，否则 Test Runner 会把它识别为 EditMode 测试）
+- `defineConstraints`: `["UNITY_INCLUDE_TESTS"]`（仅在测试编译期编译，不进入 Player）
+- `references`: GameLogic / EF.Runtime / UniTask / YooAsset / UnityEngine.TestRunner / UnityEditor.TestRunner（GUID 引用）
+- `precompiledReferences`: `["nunit.framework.dll"]`
+- `autoReferenced`: `false`，`overrideReferences`: `true`
+
+### PlayModeTestBase 用法
+
+所有 PlayMode 测试继承 `PlayModeTestBase`。基类负责：
+
+1. `[UnitySetUp]`：抓取入场前 ModuleSystem 注册数 → `ModuleSystem.ShutdownAll()` 清空残留 → 创建测试根 `TestRoot` (`DontDestroyOnLoad`) → 克隆生产 `EFResourceModeConfig` 强制 EditorSimulate 模式 → `await ResourceManager.InitializeAsync(...)`。
+2. `[UnityTearDown]`：调用子类 `OnTearDownAsync` → `Unregister<IResourceManager>(shutdown: false)`（**不调 ResourceManager.Shutdown**，因 YooAsset 2.3.18 的 `DestroyOperation.WaitForAsyncComplete()` 抛 `NotImplementedException`） → `Resource.ReleaseAll()` → 反射读 `_packages` 异步 `await package.DestroyAsync().Task` 逐个销毁 → `YooAssets.RemovePackage` → `YooAssets.Destroy()` → `ModuleSystem.ShutdownAll()` → 销毁 `TestRoot` → `UniTask.Yield()` 推进一帧。
+
+子类钩子：
+
+- `protected override UniTask OnSetUpAsync()`：注册其他被测模块（SceneManager / EntityManager / TimerManager 等）。
+- `protected override UniTask OnTearDownAsync()`：可选额外清理。
+
+工具方法：
+
+- `protected UniTask FrameDelay(int frames)`：跨帧推进。
+- `protected UniTask<AssetHandle> LoadFixtureAsync<T>(string location)`：薄封装 `Resource.LoadAssetAsync<T>`。
+- `protected void AssertNoLeakedHandles()`：断言 ResourceManager 内部 `_trackedHandles` 已清空。
+
+### 触发方式
+
+#### 1. Unity 编辑器手动触发（推荐）
+
+`Window > General > Test Runner > PlayMode` 标签 → 选中要跑的 fixture → Run。每个测试 1~3 秒，全套约 30~60 秒（首次会跑一遍 `EditorSimulateModeHelper.SimulateBuild`）。
+
+#### 2. AIBridge CLI（已安装时）
+
+```bash
+# 列出所有 PlayMode 测试
+.aibridge/cli/AIBridgeCLI.exe test run --mode PlayMode --list
+
+# 运行（filter 可按类名过滤）
+.aibridge/cli/AIBridgeCLI.exe test run --mode PlayMode --filter BootstrapTest
+```
+
+### 编译验证（不跑测试）
+
+```bash
+.aibridge/cli/AIBridgeCLI.exe compile unity
+.aibridge/cli/AIBridgeCLI.exe get_logs --logType Error
+```
+
+AIBridge 不可用且项目未被 Unity 打开时，可使用 `<UnityEditorPath> -batchmode -quit -projectPath .` 完成导入编译。
+
+### 已知限制 / 不在范围内
+
+- **UGUI 端到端验证仍需编辑器参与**：`WFrameworkUiIntegrationTests` 覆盖窗口生命周期与场景根绑定，实际 Prefab、Canvas、GraphicRaycaster 与输入系统交互仍需在 Unity Test Runner 或手动启动流程中确认。
+- **不覆盖 SoundManager**：项目内当前不存在 `.wav/.mp3/.ogg` 资源；待资源补齐后另开变更覆盖。
+- **不在 CI 跑**：本期只支持本地手动跑；CI batchmode 接入留作单独变更。
+- **不覆盖 HybridCLR / Procedure / 端到端流程**：依赖热更元数据状态，过于脆弱。

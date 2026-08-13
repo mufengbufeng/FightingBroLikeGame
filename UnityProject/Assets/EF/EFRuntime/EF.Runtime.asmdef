@@ -1,0 +1,21 @@
+{
+    "name": "EF.Runtime",
+    "rootNamespace": "",
+    "references": [
+        "GUID:e34a5702dd353724aa315fb8011f08c3",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:7dfb82587ed98924cb0875656e64f754",
+        "GUID:3b570a5146f9d4f0fa107ed4559471a3",
+        "Unity.ugui",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

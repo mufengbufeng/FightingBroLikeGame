@@ -1,0 +1,22 @@
+{
+    "name": "EF.Resource.BackgroundDownload",
+    "rootNamespace": "",
+    "references": [
+        "GUID:901fdfb0b8ece28439b245be1b1f16b0",
+        "GUID:a4b21e772636f4f018b7cf036d722999"
+    ],
+    "includePlatforms": [
+        "Android",
+        "Editor",
+        "iOS",
+        "WSA"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
