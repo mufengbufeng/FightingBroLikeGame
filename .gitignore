@@ -33,10 +33,9 @@ Desktop.ini
 UnityProject/.env
 UnityProject/output/
 UnityProject/harness-workspace/
-UnityProject/.codex/
-UnityProject/.aibridge/
+UnityProject/.codex/*
+!UnityProject/.codex/config.toml
 UnityProject/.understand-anything/
-UnityProject/.mcp.json
 UnityProject/testlog.txt
 UnityProject/TestResults/
 UnityProject/Assets/Resources/PerformanceTestRunInfo.json*
@@ -48,11 +47,21 @@ UnityProject/Assets/Resources/PerformanceTestRunSettings.json*
 # Serena
 .serena/
 
-# MemPalace / harness
+# MemPalace / codedb generated data. Keep portable project MCP config.
 .mempalace/
 .mempalace_local/
 .mcp_data/
-.codedb-mcp/
+.codedb-mcp/*
+!.codedb-mcp/codedb-mcp.toml
+!.codedb-mcp/run-mcp.cmd
+UnityProject/.codedb-mcp/*
+!UnityProject/.codedb-mcp/codedb-mcp.toml
+!UnityProject/.codedb-mcp/run-mcp.cmd
+UnityProject/.mempalace/
+UnityProject/.mempalace_local/
+UnityProject/.mcp_data/
+UnityProject/mempalace.yaml
+UnityProject/entities.json
 
 # Python
 __pycache__/

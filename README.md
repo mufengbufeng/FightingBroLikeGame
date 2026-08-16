@@ -39,14 +39,6 @@ UnityProject/               Unity 6 游戏项目
 
 ## 验证
 
-Unity 已打开时优先使用 AIBridge：
-
-```powershell
-.\.aibridge\cli\AIBridgeCLI.exe compile unity
-.\.aibridge\cli\AIBridgeCLI.exe get_logs --logType Error
-.\.aibridge\cli\AIBridgeCLI.exe test run --mode EditMode
-```
-
 Unity 未打开时，可通过 Unity Test Framework 的 batchmode 执行 EditMode 测试。不要在同一项目已被编辑器打开时启动第二个 Unity 实例。
 
 ## EF 同步流程

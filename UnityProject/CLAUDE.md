@@ -23,20 +23,22 @@ Unity 6000.3 (Unity 6) 游戏项目，使用 **EasyFramework (EF)** 自研模块
 
 所有模块在 `Assets/EF/EFRuntime/` 中，通过 `ModuleSystem`（静态服务定位器）注册/获取：
 
-| 模块       | 接口                 | 职责                                                |
-| ---------- | -------------------- | --------------------------------------------------- |
-| Resource   | `IResourceManager`   | 基于 YooAsset 的资源加载                            |
-| Event      | `IEventManager`      | 发布/订阅事件系统                                   |
+
+| 模块         | 接口                     | 职责                                 |
+| ---------- | ---------------------- | ---------------------------------- |
+| Resource   | `IResourceManager`     | 基于 YooAsset 的资源加载                  |
+| Event      | `IEventManager`        | 发布/订阅事件系统                          |
 | UI         | `IWFrameworkUIManager` | W-Framework 窗口栈、焦点、资源加载与生命周期       |
-| Sound      | `ISoundManager`      | 音频播放                                            |
-| Timer      | `ITimerManager`      | 定时器调度                                          |
-| ObjectPool | `IObjectPoolManager` | 对象池                                              |
-| Fsm        | `IFsmManager`        | 有限状态机                                          |
-| Procedure  | `IProcedureManager`  | 游戏流程状态（基于 FSM）                            |
-| Save       | `ISaveManager`       | 本地存档                                            |
-| Model      | `ModelManager`       | 数据模型管理，支持 `INotifyPropertyChanged`         |
-| Entity     | `IEntityManager`     | 实体生命周期与对象池                                |
-| Scene      | `ISceneManager`      | 场景加载/卸载                                       |
+| Sound      | `ISoundManager`        | 音频播放                               |
+| Timer      | `ITimerManager`        | 定时器调度                              |
+| ObjectPool | `IObjectPoolManager`   | 对象池                                |
+| Fsm        | `IFsmManager`          | 有限状态机                              |
+| Procedure  | `IProcedureManager`    | 游戏流程状态（基于 FSM）                     |
+| Save       | `ISaveManager`         | 本地存档                               |
+| Model      | `ModelManager`         | 数据模型管理，支持 `INotifyPropertyChanged` |
+| Entity     | `IEntityManager`       | 实体生命周期与对象池                         |
+| Scene      | `ISceneManager`        | 场景加载/卸载                            |
+
 
 - 获取管理器 → `ModuleSystem.Get<IXxxManager>()` 或 `GameLogicEntry.XXX` 静态属性
 - 新管理器实现 → `IEFManager` 接口（`Update` + `Shutdown`）
@@ -59,12 +61,14 @@ Unity 6000.3 (Unity 6) 游戏项目，使用 **EasyFramework (EF)** 自研模块
 
 ### 程序集
 
-| 程序集                     | 路径                                                  | 类型                    |
-| -------------------------- | ----------------------------------------------------- | ----------------------- |
-| `EF.Runtime`               | `Assets/EF/EFRuntime/`                                | AOT（框架）             |
-| `GameLogic`                | `Assets/GameScripts/HotFix/GameLogic/`                | 热更新                  |
+
+| 程序集                        | 路径                                                    | 类型           |
+| -------------------------- | ----------------------------------------------------- | ------------ |
+| `EF.Runtime`               | `Assets/EF/EFRuntime/`                                | AOT（框架）      |
+| `GameLogic`                | `Assets/GameScripts/HotFix/GameLogic/`                | 热更新          |
 | `GameProto`                | `Assets/GameScripts/HotFix/GameProto/`                | 热更新（协议/数据定义） |
-| `GameLogic.Tests.EditMode` | `Assets/GameScripts/HotFix/GameLogic/Tests/EditMode/` | 编辑器测试              |
+| `GameLogic.Tests.EditMode` | `Assets/GameScripts/HotFix/GameLogic/Tests/EditMode/` | 编辑器测试        |
+
 
 ### 核心依赖
 
@@ -79,21 +83,21 @@ Unity 6000.3 (Unity 6) 游戏项目，使用 **EasyFramework (EF)** 自研模块
 
 ### 读代码
 
-| 想做的事 | 用什么工具 |
-| -------- | ---------- |
-| 概念/自然语言搜索 | codedb `codedb_search`（默认语义 + BM25 混合排序） |
-| 关键词 top-K 例子 | codedb `codedb_search`（默认 lexical + vector） |
-| 找语义相似代码 | codedb `codedb_search`（贴上参考 chunk 关键文字）或 `codedb_explain` |
-| 全量字面/正则匹配（审计、批量改） | 优先 codedb `codedb_search`（`regex=true`），`rg` 仅作备选 |
-| 查看文件符号结构 | codedb `codedb_outline` |
-| 按名称查找符号定义 | codedb `codedb_symbol`（`body=true` 拿源码） |
-| 查询符号被谁引用 | codedb `codedb_callers` |
-| 找文件（路径模糊） | codedb `codedb_find` / `codedb_glob` |
-| 列目录 / 看子节点 | codedb `codedb_ls` / `codedb_tree` |
-| 读文件片段 | codedb `codedb_read`（小段优先，全文用内置 Read） |
-| 看最近修改的文件 | codedb `codedb_hot` / `codedb_changes` |
-| 查文件依赖/反向依赖 | codedb `codedb_deps`（C# namespace 精度最高） |
 
+| 想做的事              | 用什么工具                                                     |
+| ----------------- | --------------------------------------------------------- |
+| 概念/自然语言搜索         | codedb `codedb_search`（默认语义 + BM25 混合排序）                  |
+| 关键词 top-K 例子      | codedb `codedb_search`（默认 lexical + vector）               |
+| 找语义相似代码           | codedb `codedb_search`（贴上参考 chunk 关键文字）或 `codedb_explain` |
+| 全量字面/正则匹配（审计、批量改） | 优先 codedb `codedb_search`（`regex=true`），`rg` 仅作备选         |
+| 查看文件符号结构          | codedb `codedb_outline`                                   |
+| 按名称查找符号定义         | codedb `codedb_symbol`（`body=true` 拿源码）                   |
+| 查询符号被谁引用          | codedb `codedb_callers`                                   |
+| 找文件（路径模糊）         | codedb `codedb_find` / `codedb_glob`                      |
+| 列目录 / 看子节点        | codedb `codedb_ls` / `codedb_tree`                        |
+| 读文件片段             | codedb `codedb_read`（小段优先，全文用内置 Read）                     |
+| 看最近修改的文件          | codedb `codedb_hot` / `codedb_changes`                    |
+| 查文件依赖/反向依赖        | codedb `codedb_deps`（C# namespace 精度最高）                   |
 
 
 ### 工具使用规则
@@ -117,20 +121,7 @@ Unity 6000.3 (Unity 6) 游戏项目，使用 **EasyFramework (EF)** 自研模块
 - PlayMode → `GameLogic.Tests.PlayMode` 程序集，覆盖 EF 运行时基础设施（YooAsset 初始化、SceneManager、EntityManager prefab 池化、UniTask + TimerManager 帧驱动），详见 `Assets/GameScripts/HotFix/GameLogic/Tests/README.md`
 - CI 范围 → 仅 EditMode；PlayMode 仅本地
 
-### 编译检查与测试触发
 
-| 想做的事 | 怎么做 |
-| -------- | ------ |
-| 默认编译检查（新增/修改/删除 C# 脚本、`.asmdef`、`Packages/manifest.json` 后必须执行） | Unity 已打开时使用 AIBridge CLI `compile unity`；否则使用 Unity Editor batchmode 导入项目 |
-| 回退编译命令（Unity 已打开时） | `dotnet build UnityProject.slnx --no-restore` |
-| Unity 已打开时验证（编译 / Console / EditMode 测试 / 场景 Prefab 检查） | 使用 AIBridge CLI（`.aibridge/cli/AIBridgeCLI.exe`）→ `compile unity` / `get_logs` / `test run --mode EditMode` |
-| 首次配置 AIBridge | Unity 编辑器 → `AIBridge/Workflows` 窗口 → Skills 标签 → 勾选 Claude → "Install Selected Integrations" |
-| Unity 未打开时跑 EditMode 测试 | `"<UnityEditorPath>" -batchmode -quit -runTests -testPlatform EditMode -testResults TestResults/editmode-results.xml -projectPath .` |
-| PlayMode 测试（仅本地） | `Window > General > Test Runner > PlayMode` 标签 → Run；或 AIBridge CLI `test run --mode PlayMode` |
-
-- Unity 编辑器路径 → 由开发者本机安装位置决定，命令中以 `<UnityEditorPath>` 表示
-- Unity 版本 → 6000.3.12f1（Unity 6）
-- 同项目已被 Unity 打开 → 禁止启动第二个 `Unity.exe -batchmode` 实例
 
 ## 项目约定
 
@@ -161,60 +152,62 @@ Unity 6000.3 (Unity 6) 游戏项目，使用 **EasyFramework (EF)** 自研模块
 
 代码搜索、符号查询、引用查找、依赖图——读操作首选。
 
-| 想做的事 | 怎么做 |
-| -------- | ------ |
-| 注册 MCP（首次） | `claude mcp add --transport stdio --scope local codedb-mcp -- "<codebase-mcp.exe>" --config "<repo>\.codedb-mcp\codedb-mcp.toml" mcp "<repo>"` |
-| 构建/重建索引（兜底） | `"<codebase-mcp.exe>" --config "<repo>\.codedb-mcp\codedb-mcp.toml" index "<repo>"` |
-| 健康检查 | `codedb_status` |
-| 语义/关键词搜索 | `codedb_search(query, path)` |
-| 正则搜索 | `codedb_search(query, regex=true)` |
-| 文件符号 outline | `codedb_outline(path)` |
-| 找定义 | `codedb_symbol(name, body=true)` |
-| 查引用（LSP-like） | `codedb_callers(target: { path, line })` |
-| 找文件（模糊/glob） | `codedb_find(query)` / `codedb_glob(pattern)` |
-| 列目录 / 看树 | `codedb_ls(path)` / `codedb_tree` |
-| 文件依赖 / 反向依赖 | `codedb_deps(path, direction, transitive)` |
-| 最近改动 | `codedb_hot` / `codedb_changes(since_sequence)` |
-| 一次发多个查询 | `codedb_bundle([...])`（最多 100 个，禁套娃） |
 
-- 配置 → `<repo>\.codedb-mcp\codedb-mcp.toml`（C# 扩展、Unity skip_dirs、`Library/PackageCache` include）
-- 索引位置 → `<repo>\.codedb-mcp\index.bin`（已 gitignore）
+| 想做的事          | 怎么做                                                                                                                                            |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 注册 MCP（首次）    | 项目已提交 `.mcp.json` / `.codex/config.toml`。本机需能找到 `codebase-mcp.exe`（`CODEDB_MCP_EXE`、PATH，或 `%USERPROFILE%\.claude\skills\codedb-mcp\assets\codebase-mcp.exe`） |
+| 构建/重建索引（兜底）   | `"<codebase-mcp.exe>" --config "UnityProject\.codedb-mcp\codedb-mcp.toml" index "UnityProject"`                                                            |
+| 健康检查          | `codedb_status`                                                                                                                                |
+| 语义/关键词搜索      | `codedb_search(query, path)`                                                                                                                   |
+| 正则搜索          | `codedb_search(query, regex=true)`                                                                                                             |
+| 文件符号 outline  | `codedb_outline(path)`                                                                                                                         |
+| 找定义           | `codedb_symbol(name, body=true)`                                                                                                               |
+| 查引用（LSP-like） | `codedb_callers(target: { path, line })`                                                                                                       |
+| 找文件（模糊/glob）  | `codedb_find(query)` / `codedb_glob(pattern)`                                                                                                  |
+| 列目录 / 看树      | `codedb_ls(path)` / `codedb_tree`                                                                                                              |
+| 文件依赖 / 反向依赖   | `codedb_deps(path, direction, transitive)`                                                                                                     |
+| 最近改动          | `codedb_hot` / `codedb_changes(since_sequence)`                                                                                                |
+| 一次发多个查询       | `codedb_bundle([...])`（最多 100 个，禁套娃）                                                                                                           |
+
+
+- 配置 → `UnityProject\.codedb-mcp\codedb-mcp.toml`（C# 扩展、Unity skip_dirs、`Library/PackageCache` include）
+- 索引位置 → `UnityProject\.codedb-mcp\` 下的生成文件（已 gitignore）
 - 文件监听 → `[watch] enabled = true`，C# 文件保存后 debounce 自动重建对应 chunk
-- 自动更新失效场景 → MCP 进程未运行 / 改的扩展不在 `["cs"]` / 文件在 `skip_dirs` / 文件 > 50 MB → 需手动 reindex
-
-### AIBridge（编辑器自动化）
-
-- 安装 → Package Manager 导入 `cn.lys.aibridge`（`https://github.com/liyingsong99/AIBridge.git`）
-- 配置 → Unity 编辑器 `AIBridge/Workflows` 窗口 → Skills 标签 → 勾选 Claude → "Install Selected Integrations"
-- CLI 路径 → `.aibridge/cli/AIBridgeCLI.exe`（Unity 导入包后自动生成）
-- 常用 CLI 命令 → `compile unity` / `get_logs --logType Error` / `test run --mode EditMode` / `screenshot game` / `scene get_hierarchy`
-- 优先级 → Unity 已打开时，编译/Console/EditMode 测试/场景检查走 AIBridge CLI
+- 自动更新失效场景 → MCP 进程未运行 / 改的扩展不在 `["cs"]` / 文件在 `skip_dirs` / 文件 &gt; 50 MB → 需手动 reindex
 
 ### Matt Pocock Skills（调试/TDD 辅助）
 
-| 想做的事 | 斜杠命令 |
-| -------- | -------- |
-| 复杂缺陷/性能问题诊断 | `/diagnose` |
-| 红绿重构循环实现 | `/tdd` |
-| 理解陌生代码区域 | `/zoom-out` |
-| 对方案/设计连续追问 | `/grill-me` |
+
+| 想做的事                   | 斜杠命令             |
+| ---------------------- | ---------------- |
+| 复杂缺陷/性能问题诊断            | `/diagnose`      |
+| 红绿重构循环实现               | `/tdd`           |
+| 理解陌生代码区域               | `/zoom-out`      |
+| 对方案/设计连续追问             | `/grill-me`      |
 | 创建新的 Claude Code skill | `/write-a-skill` |
+
 
 ### MemPalace（跨会话记忆 / MCP）
 
-方式一 → Claude Code 插件
+项目已通过可移植启动命令接入 MCP，无需再写本机绝对路径。
+
+本机依赖：
+
+```bash
+uv tool install mempalace
+# 或: pip install mempalace
+```
+
+Palace 数据写在 `UnityProject/.mempalace/`（已 gitignore）。
+
+可选插件安装：
+
 ```bash
 claude plugin marketplace add MemPalace/mempalace
 claude plugin install --scope user mempalace
 ```
-随后运行 `/mempalace:init`
 
-方式二 → Python 包 + local scope MCP
-```bash
-pip install mempalace
-claude mcp add --transport stdio --scope local mempalace -- python3 -m mempalace.mcp_server
-```
-Windows 环境 → `python3` 改为 `python`
+随后运行 `/mempalace:init`。
 
 - 约束 → 个人 palace 数据、会话挖掘结果、向量库、密钥、机器相关路径不得提交仓库
-- 项目级 `.mcp.json` 提交条件 → 启动命令对所有机器可移植且不含个人路径/密钥
+- 项目级 `.mcp.json` 已提交 → 启动命令只用 `cmd` / `uvx` / `python`，不含个人路径或密钥

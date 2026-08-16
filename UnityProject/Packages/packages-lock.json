@@ -1,17 +1,5 @@
 {
   "dependencies": {
-    "cn.lys.aibridge": {
-      "version": "https://github.com/liyingsong99/AIBridge.git",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {
-        "com.unity.ugui": "1.0.0",
-        "com.unity.test-framework": "1.1.31",
-        "com.unity.modules.imageconversion": "1.0.0",
-        "com.unity.modules.screencapture": "1.0.0"
-      },
-      "hash": "deb00bb545696e4081b1efbbf0bcebbf21a21ed8"
-    },
     "com.besty.unity-skills": {
       "version": "file:com.besty.unity-skills",
       "depth": 0,

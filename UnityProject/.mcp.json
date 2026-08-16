@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "codedb-mcp": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": [
+        "/c",
+        ".codedb-mcp\\run-mcp.cmd"
+      ]
+    },
+    "mempalace": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "tools\\mcp\\run-mempalace.cmd"
+      ]
+    }
+  }
+}

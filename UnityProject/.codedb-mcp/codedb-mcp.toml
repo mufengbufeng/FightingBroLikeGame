@@ -1,0 +1,79 @@
+# codedb-mcp project configuration.
+# Generated data stays in this directory and is gitignored.
+
+[scan]
+# Unity C# only. Add other tree-sitter extensions here only when this repo needs them.
+extensions = ["cs"]
+
+# Skip extremely large generated files before parsing.
+max_file_bytes = 50000000
+
+# Respect .gitignore for the normal tree walk. Nested worktrees/submodules under
+# the target root are still scanned as source directories.
+respect_gitignore = true
+
+# Game/package C# plus the PackageCache dependency source mirror.
+root_paths = ["Assets", "Packages", "Library/PackageCache"]
+
+# Extra paths to include even when a parent directory is skipped.
+include_paths = ["Library/PackageCache"]
+
+# Keep Editor tooling and EditMode tests indexed.
+exclude_paths = []
+
+# Directory names to skip. include_paths still wins for PackageCache.
+skip_dirs = [
+  ".git",
+  ".hg",
+  ".svn",
+  ".vs",
+  ".idea",
+  ".gradle",
+  "node_modules",
+  "target",
+  "dist",
+  ".next",
+  ".svelte-kit",
+  "coverage",
+  "out",
+  ".codedb-mcp",
+  ".mempalace",
+  ".mempalace_local",
+  ".mcp_data",
+  "Library",
+  "Temp",
+  "Logs",
+  "obj",
+  "bin",
+  "Build",
+  "Builds",
+  "UserSettings",
+  "HybridCLRData",
+  "Bundles",
+  "yoo",
+]
+
+[diagnostics]
+# Set timing=true only while benchmarking; it writes stage timings to stderr.
+timing = false
+
+# Emit a slow-file parse log for files at or above this many ms. 0 disables it.
+slow_file_ms = 0
+
+[logging]
+# Disabled by default. Queue overflow drops log lines instead of slowing MCP.
+enabled = false
+file = ".codedb-mcp/codedb-mcp.log"
+queue_capacity = 8192
+flush_interval_ms = 500
+
+[watch]
+# MCP mode queues filesystem events and applies one live-incremental batch
+# every poll_interval_seconds.
+enabled = true
+poll_interval_seconds = 5
+
+[storage]
+# Delete this directory to remove all local codedb-mcp data for this project.
+enabled = true
+dir = ".codedb-mcp"

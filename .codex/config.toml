@@ -1,0 +1,13 @@
+# Project-scoped MCP servers. Commands are portable and contain no machine paths.
+
+[mcp_servers.codedb-mcp]
+command = "cmd"
+args = ["/c", "UnityProject\\.codedb-mcp\\run-mcp.cmd"]
+cwd = "."
+startup_timeout_sec = 30
+
+[mcp_servers.mempalace]
+command = "cmd"
+args = ["/c", "UnityProject\\tools\\mcp\\run-mempalace.cmd"]
+cwd = "."
+startup_timeout_sec = 90

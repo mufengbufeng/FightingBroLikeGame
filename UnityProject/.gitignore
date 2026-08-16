@@ -124,5 +124,11 @@ InitTestScene*.unity*
 *.pyc
 /harness-workspace/mempalace-github-code/.tmp_*/
 
-# codedb-mcp local index/cache
-/.codedb-mcp/
+# mempalace init artifacts at project root
+/mempalace.yaml
+/entities.json
+
+# codedb-mcp local index/cache. Keep portable config and launcher.
+/.codedb-mcp/*
+!/.codedb-mcp/codedb-mcp.toml
+!/.codedb-mcp/run-mcp.cmd

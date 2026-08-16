@@ -68,24 +68,7 @@ Tests/
 
 `Window > General > Test Runner > PlayMode` 标签 → 选中要跑的 fixture → Run。每个测试 1~3 秒，全套约 30~60 秒（首次会跑一遍 `EditorSimulateModeHelper.SimulateBuild`）。
 
-#### 2. AIBridge CLI（已安装时）
-
-```bash
-# 列出所有 PlayMode 测试
-.aibridge/cli/AIBridgeCLI.exe test run --mode PlayMode --list
-
-# 运行（filter 可按类名过滤）
-.aibridge/cli/AIBridgeCLI.exe test run --mode PlayMode --filter BootstrapTest
-```
-
-### 编译验证（不跑测试）
-
-```bash
-.aibridge/cli/AIBridgeCLI.exe compile unity
-.aibridge/cli/AIBridgeCLI.exe get_logs --logType Error
-```
-
-AIBridge 不可用且项目未被 Unity 打开时，可使用 `<UnityEditorPath> -batchmode -quit -projectPath .` 完成导入编译。
+Unity 编辑器未打开时，可使用 `<UnityEditorPath> -batchmode -quit -projectPath .` 完成导入编译。
 
 ### 已知限制 / 不在范围内
 

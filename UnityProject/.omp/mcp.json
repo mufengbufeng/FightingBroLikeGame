@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+  "mcpServers": {
+    "codedb-mcp": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", ".codedb-mcp\\run-mcp.cmd"],
+      "cwd": "."
+    },
+    "mempalace": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": ["/c", "tools\\mcp\\run-mempalace.cmd"],
+      "cwd": "."
+    }
+  }
+}
