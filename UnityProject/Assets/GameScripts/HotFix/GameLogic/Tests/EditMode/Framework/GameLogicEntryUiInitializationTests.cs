@@ -56,7 +56,7 @@ namespace GameLogic.Tests
             string entry = File.ReadAllText(GetGameLogicEntryPath());
 
             StringAssert.Contains("new MainWindowProcedure()", entry);
-            StringAssert.Contains("ChangeState<MainWindowProcedure>(procedureOwner);", initProcedure);
+            StringAssert.Contains("new GamePlayProcedure()", entry);
             StringAssert.Contains("IWFrameworkUIManager uiManager = GameLogicEntry.WFrameworkUI;", initProcedure);
             StringAssert.Contains("uiManager.Open(MainWindowId)", initProcedure);
             StringAssert.Contains("uiManager.CloseGroup(MainWindowId)", initProcedure);

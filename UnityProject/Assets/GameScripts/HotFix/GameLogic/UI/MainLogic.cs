@@ -1,5 +1,6 @@
 using EF.Debugger;
 using EF.UI.WFramework;
+using GameLogic.GamePlay;
 using UnityEngine;
 
 namespace GameLogic
@@ -67,6 +68,11 @@ namespace GameLogic
         private void OnStartExpeditionClicked()
         {
             Log.Info("[MainLogic] 点击：开始远征。");
+            GameLogicEntry.SetProcedureData(GameLogicEntry.GamePlayLevelRequestKey, new GamePlayLevelRequest("Level_01"));
+            if (!GameLogicEntry.ChangeProcedure<GamePlayProcedure>())
+            {
+                Log.Error("[MainLogic] 无法进入 GamePlayProcedure。");
+            }
         }
 
         /// <summary>

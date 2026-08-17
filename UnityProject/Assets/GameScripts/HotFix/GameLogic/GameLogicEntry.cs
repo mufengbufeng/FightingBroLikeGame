@@ -11,6 +11,7 @@ using EF.Resource;
 using EF.Save;
 using EF.Sound;
 using EF.Timer;
+using GameLogic.GamePlay;
 using UnityEngine.Scripting;
 using WFramework = EF.UI.WFramework;
 
@@ -34,6 +35,16 @@ namespace GameLogic
         private static ICommercialService _commercialService;
         private static ModelManager _modelManager;
         private static IEntityManager _entityManager;
+
+        /// <summary>
+        /// 流程状态机名称。
+        /// </summary>
+        public const string ProcedureFsmName = "Procedure";
+
+        /// <summary>
+        /// GamePlay 关卡请求在流程状态间共享时使用的数据键。
+        /// </summary>
+        public const string GamePlayLevelRequestKey = "GamePlayLevelRequest";
 
         /// <summary>
         /// 资源管理器。
@@ -174,6 +185,63 @@ namespace GameLogic
         }
 
         /// <summary>
+        /// 测试专用：注入资源管理器。
+        /// </summary>
+        internal static void SetResourceManagerForTests(IResourceManager resourceManager)
+        {
+            _resourceManager = resourceManager;
+        }
+
+        /// <summary>
+        /// 切换到指定流程。
+        /// </summary>
+        public static bool ChangeProcedure<TProcedure>() where TProcedure : ProcedureBase
+        {
+            if (_fsmManager == null)
+            {
+                Log.Error("[GameLogicEntry] 流程状态机管理器为空，无法切换流程。");
+                return false;
+            }
+
+            IFsm<IProcedureManager> procedureFsm = _fsmManager.GetFsm<IProcedureManager>(ProcedureFsmName);
+            if (procedureFsm == null)
+            {
+                Log.Error("[GameLogicEntry] 流程状态机不存在，无法切换流程。");
+                return false;
+            }
+
+            if (!procedureFsm.HasState<TProcedure>())
+            {
+                Log.Error($"[GameLogicEntry] 流程状态机不包含 {typeof(TProcedure).Name}。");
+                return false;
+            }
+
+            procedureFsm.ChangeState<TProcedure>();
+            return true;
+        }
+
+        /// <summary>
+        /// 设置供流程状态共享的数据。
+        /// </summary>
+        public static void SetProcedureData<TData>(string name, TData data)
+        {
+            if (_fsmManager == null)
+            {
+                Log.Error("[GameLogicEntry] 流程状态机管理器为空，无法设置流程数据。");
+                return;
+            }
+
+            IFsm<IProcedureManager> procedureFsm = _fsmManager.GetFsm<IProcedureManager>(ProcedureFsmName);
+            if (procedureFsm == null)
+            {
+                Log.Error("[GameLogicEntry] 流程状态机不存在，无法设置流程数据。");
+                return;
+            }
+
+            procedureFsm.SetData(name, data);
+        }
+
+        /// <summary>
         /// 测试专用：注入事件总线。
         /// </summary>
         internal static void SetEventHubForTests(EventHub eventHub)
@@ -201,7 +269,8 @@ namespace GameLogic
                 _procedureManager.Initialize(
                     _fsmManager,
                     new InitProcedure(),
-                    new MainWindowProcedure());
+                    new MainWindowProcedure(),
+                    new GamePlayProcedure());
                 _procedureManager.StartProcedure<InitProcedure>();
                 Log.Info("[GameLogicEntry] 流程管理器启动完成。");
             }

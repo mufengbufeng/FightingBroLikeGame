@@ -1,6 +1,8 @@
 using System.Reflection;
 using EF.UI.WFramework;
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace GameLogic.Tests
 {
@@ -56,6 +58,7 @@ namespace GameLogic.Tests
             var procedureManager = new EF.Procedure.ProcedureManager();
             try
             {
+                LogAssert.Expect(LogType.Error, "[MainWindowProcedure] W-Framework UI 尚未初始化，无法打开 MainWindow。");
                 procedureManager.Initialize(fsmManager, new MainWindowProcedure());
                 procedureManager.StartProcedure<MainWindowProcedure>();
 
