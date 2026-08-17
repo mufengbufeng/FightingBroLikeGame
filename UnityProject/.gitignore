@@ -132,3 +132,7 @@ InitTestScene*.unity*
 /.codedb-mcp/*
 !/.codedb-mcp/codedb-mcp.toml
 !/.codedb-mcp/run-mcp.cmd
+# PuerTS Unity MCP 运行时状态与项目生成文件
+.puerts-unity-mcp/
+Assets/puerts-unity-mcp/Runtime/Generated/
+Assets/puerts-unity-mcp/Runtime/Generated/Plugins/puerts_il2cpp/

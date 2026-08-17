@@ -46,6 +46,34 @@
         "com.unity.modules.unitywebrequest": "1.0.0"
       }
     },
+    "com.tencent.puerts.core": {
+      "version": "file:../puerts-unity-mcp/third_party/puerts/unity/upms/core",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
+    "com.tencent.puerts.v8": {
+      "version": "file:../puerts-unity-mcp/third_party/puerts/unity/upms/v8",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.tencent.puerts.core": "3.0.2"
+      }
+    },
+    "puerts-unity-mcp": {
+      "version": "file:../puerts-unity-mcp/Packages/puerts-unity-mcp",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.tencent.puerts.core": "3.0.2",
+        "com.tencent.puerts.v8": "3.0.2",
+        "com.unity.ugui": "1.0.0",
+        "com.unity.modules.imageconversion": "1.0.0",
+        "com.unity.modules.physics": "1.0.0",
+        "com.unity.modules.screencapture": "1.0.0",
+        "com.unity.modules.unitywebrequest": "1.0.0"
+      }
+    },
     "com.tuyoogame.yooasset": {
       "version": "file:com.tuyoogame.yooasset",
       "depth": 0,

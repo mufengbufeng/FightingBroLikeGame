@@ -15,6 +15,15 @@
         "/c",
         "tools\\mcp\\run-mempalace.cmd"
       ]
+    },
+    "puerts-unity-mcp": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "puerts-unity-mcp/Packages/puerts-unity-mcp/Tools~/puerts-unity-mcp-stdio-proxy.js",
+        "--config",
+        "puerts-unity-mcp-extension/editor-mcp-config.json"
+      ]
     }
   }
 }
