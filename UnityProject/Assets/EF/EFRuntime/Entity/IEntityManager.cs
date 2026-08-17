@@ -39,6 +39,12 @@ namespace EF.Entity
         void SetEntityHelper(IEntityHelper entityHelper);
 
         /// <summary>
+        /// 在 Unity 物理帧中更新激活的实体。
+        /// </summary>
+        /// <param name="fixedDeltaTime">物理帧间隔（秒）。</param>
+        void FixedUpdate(float fixedDeltaTime);
+
+        /// <summary>
         /// 判断指定实体组是否存在。
         /// </summary>
         /// <param name="name">实体组名称。</param>

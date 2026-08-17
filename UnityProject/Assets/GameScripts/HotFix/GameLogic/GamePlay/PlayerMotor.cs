@@ -78,8 +78,6 @@ namespace GameLogic.GamePlay
 
         public Vector2 Velocity { get; private set; }
 
-        public PlayerMoveState State { get; private set; }
-
         public int Facing { get; private set; }
 
         public bool AirDashAvailable { get; private set; }
@@ -91,7 +89,6 @@ namespace GameLogic.GamePlay
         {
             Velocity = velocity;
             Facing = 1;
-            State = PlayerMoveState.Airborne;
             AirDashAvailable = true;
             _coyoteRemaining = 0f;
             _jumpBufferRemaining = 0f;
@@ -100,9 +97,18 @@ namespace GameLogic.GamePlay
         }
 
         /// <summary>
-        /// 按冲刺、攀爬、跳跃、水平移动、重力的优先级推进一拍。
+        /// 根据 EF 状态机提供的当前状态推进一拍，并返回下一移动状态。
         /// </summary>
-        public void Tick(float deltaTime, PlayerMotorInput input, PlayerMotorContacts contacts)
+        /// <param name="deltaTime">物理帧间隔（秒）。</param>
+        /// <param name="currentState">当前移动状态。</param>
+        /// <param name="input">本帧输入。</param>
+        /// <param name="contacts">本帧接触结果。</param>
+        /// <returns>下一移动状态。</returns>
+        public PlayerMoveState Tick(
+            float deltaTime,
+            PlayerMoveState currentState,
+            PlayerMotorInput input,
+            PlayerMotorContacts contacts)
         {
             if (deltaTime < 0f)
             {
@@ -111,17 +117,49 @@ namespace GameLogic.GamePlay
 
             UpdateGroundedTimers(deltaTime, contacts);
             UpdateJumpBuffer(deltaTime, input.JumpPressed);
+            UpdateDashCooldown(deltaTime);
 
-            if (TickDash(deltaTime, input, contacts))
+            if (currentState == PlayerMoveState.Dashing)
             {
-                return;
+                _dashRemaining -= deltaTime;
+                if (_dashRemaining > 0f)
+                {
+                    Velocity = new Vector2(Facing * _config.DashSpeed, 0f);
+                    return PlayerMoveState.Dashing;
+                }
+
+                _dashCooldownRemaining = _config.DashCooldown;
+                currentState = contacts.Grounded ? PlayerMoveState.Grounded : PlayerMoveState.Airborne;
             }
 
-            if (TickClimb(input, contacts))
+            if (TryStartDash(input, contacts))
             {
-                return;
+                return PlayerMoveState.Dashing;
             }
-            bool jumped = TryJump(input, contacts);
+
+            if (currentState == PlayerMoveState.Climbing || WantsClimb(input, contacts))
+            {
+                if (!contacts.OnLadder)
+                {
+                    currentState = contacts.Grounded ? PlayerMoveState.Grounded : PlayerMoveState.Airborne;
+                }
+                else if (input.JumpPressed)
+                {
+                    Velocity = new Vector2(ResolveHorizontal(input.Move.x), _config.JumpVelocity);
+                    _coyoteRemaining = 0f;
+                    _jumpBufferRemaining = 0f;
+                    return PlayerMoveState.Airborne;
+                }
+                else if (currentState == PlayerMoveState.Climbing || WantsClimb(input, contacts))
+                {
+                    Velocity = new Vector2(
+                        ResolveHorizontal(input.Move.x) * _config.ClimbHorizontalScale,
+                        input.Move.y * _config.ClimbSpeed);
+                    return PlayerMoveState.Climbing;
+                }
+            }
+
+            bool jumped = TryJump(input, contacts, currentState);
             ApplyHorizontal(input);
             bool jumpCut = ApplyJumpCut(input);
 
@@ -130,12 +168,9 @@ namespace GameLogic.GamePlay
                 ApplyGravity(deltaTime, contacts);
             }
 
-            if (State != PlayerMoveState.Dashing && State != PlayerMoveState.Climbing)
-            {
-                State = jumped || !contacts.Grounded
-                    ? PlayerMoveState.Airborne
-                    : PlayerMoveState.Grounded;
-            }
+            return jumped || !contacts.Grounded
+                ? PlayerMoveState.Airborne
+                : PlayerMoveState.Grounded;
         }
 
         private void UpdateGroundedTimers(float deltaTime, PlayerMotorContacts contacts)
@@ -161,27 +196,16 @@ namespace GameLogic.GamePlay
             _jumpBufferRemaining = Mathf.Max(0f, _jumpBufferRemaining - deltaTime);
         }
 
-        private bool TickDash(float deltaTime, PlayerMotorInput input, PlayerMotorContacts contacts)
+        private void UpdateDashCooldown(float deltaTime)
         {
             if (_dashCooldownRemaining > 0f)
             {
                 _dashCooldownRemaining = Mathf.Max(0f, _dashCooldownRemaining - deltaTime);
             }
+        }
 
-            if (State == PlayerMoveState.Dashing)
-            {
-                _dashRemaining -= deltaTime;
-                if (_dashRemaining > 0f)
-                {
-                    Velocity = new Vector2(Facing * _config.DashSpeed, 0f);
-                    State = PlayerMoveState.Dashing;
-                    return true;
-                }
-
-                _dashCooldownRemaining = _config.DashCooldown;
-                State = contacts.Grounded ? PlayerMoveState.Grounded : PlayerMoveState.Airborne;
-            }
-
+        private bool TryStartDash(PlayerMotorInput input, PlayerMotorContacts contacts)
+        {
             if (!input.DashPressed || _dashCooldownRemaining > 0f)
             {
                 return false;
@@ -202,7 +226,6 @@ namespace GameLogic.GamePlay
             }
 
             Velocity = new Vector2(Facing * _config.DashSpeed, 0f);
-            State = PlayerMoveState.Dashing;
             _dashRemaining = _config.DashDuration;
             if (!contacts.Grounded)
             {
@@ -212,42 +235,12 @@ namespace GameLogic.GamePlay
             return true;
         }
 
-        private bool TickClimb(PlayerMotorInput input, PlayerMotorContacts contacts)
+        private bool WantsClimb(PlayerMotorInput input, PlayerMotorContacts contacts)
         {
-            bool wantsClimb = contacts.OnLadder && Mathf.Abs(input.Move.y) >= _config.ClimbEnterThreshold;
-            if (State != PlayerMoveState.Climbing && !wantsClimb)
-            {
-                return false;
-            }
-
-            if (!contacts.OnLadder)
-            {
-                State = contacts.Grounded ? PlayerMoveState.Grounded : PlayerMoveState.Airborne;
-                return false;
-            }
-
-            if (input.JumpPressed)
-            {
-                Velocity = new Vector2(ResolveHorizontal(input.Move.x), _config.JumpVelocity);
-                _coyoteRemaining = 0f;
-                _jumpBufferRemaining = 0f;
-                State = PlayerMoveState.Airborne;
-                return true;
-            }
-
-            if (!wantsClimb && State != PlayerMoveState.Climbing)
-            {
-                return false;
-            }
-
-            Velocity = new Vector2(
-                ResolveHorizontal(input.Move.x) * _config.ClimbHorizontalScale,
-                input.Move.y * _config.ClimbSpeed);
-            State = PlayerMoveState.Climbing;
-            return true;
+            return contacts.OnLadder && Mathf.Abs(input.Move.y) >= _config.ClimbEnterThreshold;
         }
 
-        private bool TryJump(PlayerMotorInput input, PlayerMotorContacts contacts)
+        private bool TryJump(PlayerMotorInput input, PlayerMotorContacts contacts, PlayerMoveState currentState)
         {
             bool buffered = _jumpBufferRemaining > 0f;
             if (!input.JumpPressed && !buffered)
@@ -255,7 +248,7 @@ namespace GameLogic.GamePlay
                 return false;
             }
 
-            bool canJump = contacts.Grounded || _coyoteRemaining > 0f || State == PlayerMoveState.Climbing;
+            bool canJump = contacts.Grounded || _coyoteRemaining > 0f || currentState == PlayerMoveState.Climbing;
             if (!canJump)
             {
                 return false;
@@ -264,7 +257,6 @@ namespace GameLogic.GamePlay
             Velocity = new Vector2(Velocity.x, _config.JumpVelocity);
             _coyoteRemaining = 0f;
             _jumpBufferRemaining = 0f;
-            State = PlayerMoveState.Airborne;
             return true;
         }
 

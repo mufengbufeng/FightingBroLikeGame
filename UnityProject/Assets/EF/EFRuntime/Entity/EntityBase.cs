@@ -131,5 +131,13 @@ namespace EF.Entity
             // 更新所有已启用的特性
             _features.Update(elapseSeconds, realElapseSeconds);
         }
+
+        /// <summary>
+        /// 实体物理帧更新。
+        /// </summary>
+        /// <param name="fixedDeltaTime">物理帧间隔（秒）。</param>
+        public virtual void OnFixedUpdate(float fixedDeltaTime)
+        {
+        }
     }
 }

@@ -63,6 +63,11 @@ public class MyEntity : EntityBase
         base.OnUpdate(elapseSeconds, realElapseSeconds);
         // 每帧更新逻辑
     }
+
+    public override void OnFixedUpdate(float fixedDeltaTime)
+    {
+        // 与 Unity 物理系统同步的逻辑
+    }
 }
 ```
 
@@ -127,6 +132,7 @@ entityManager.DetachEntity(childEntityId);
 | `DetachEntity(childId, data)` | 分离子实体 |
 | `HasEntity(id)` | 判断实体是否存在 |
 | `GetEntity(id)` | 获取实体 |
+| `FixedUpdate(fixedDeltaTime)` | 在 Unity 物理帧中更新激活的 `EntityBase` 实体 |
 
 ### IEntity
 
@@ -141,6 +147,12 @@ entityManager.DetachEntity(childEntityId);
 | `OnAttachTo(parent, data)` | 附加到父实体时调用 |
 | `OnDetachFrom(parent, data)` | 从父实体分离时调用 |
 | `OnUpdate(elapse, realElapse)` | 每帧更新 |
+
+### EntityBase
+
+| 方法 | 描述 |
+|------|------|
+| `OnFixedUpdate(fixedDeltaTime)` | 由 `IEntityManager.FixedUpdate` 在 Unity 物理帧中调用 |
 
 ## 配置选项
 

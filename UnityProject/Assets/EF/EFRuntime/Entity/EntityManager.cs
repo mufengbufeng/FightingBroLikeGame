@@ -26,6 +26,7 @@ namespace EF.Entity
         private readonly Dictionary<string, GameObject> _assetCache;
         private int _serialId;
         private Queue<IEntity> _entityUpdateQueue;
+        private Queue<EntityBase> _entityFixedUpdateQueue;
 
         /// <summary>
         /// 当前已加载的实体数量。
@@ -48,6 +49,7 @@ namespace EF.Entity
             _parentEntityIndices = new Dictionary<int, List<int>>();
             _assetCache = new Dictionary<string, GameObject>(StringComparer.Ordinal);
             _entityUpdateQueue = new Queue<IEntity>();
+            _entityFixedUpdateQueue = new Queue<EntityBase>();
         }
 
         /// <summary>
@@ -112,6 +114,33 @@ namespace EF.Entity
         }
 
         /// <summary>
+        /// 在物理帧中更新激活的 EntityBase 实体。
+        /// </summary>
+        /// <param name="fixedDeltaTime">物理帧间隔（秒）。</param>
+        public void FixedUpdate(float fixedDeltaTime)
+        {
+            _entityFixedUpdateQueue.Clear();
+            foreach (var entity in _entities.Values)
+            {
+                if (entity is EntityBase entityBase
+                    && entityBase.Handle != null
+                    && entityBase.Handle.activeInHierarchy)
+                {
+                    _entityFixedUpdateQueue.Enqueue(entityBase);
+                }
+            }
+
+            while (_entityFixedUpdateQueue.Count > 0)
+            {
+                EntityBase entity = _entityFixedUpdateQueue.Dequeue();
+                if (_entities.ContainsKey(entity.Id))
+                {
+                    entity.OnFixedUpdate(fixedDeltaTime);
+                }
+            }
+        }
+
+        /// <summary>
         /// 关闭实体管理器。
         /// </summary>
         public override void Shutdown()
@@ -128,6 +157,7 @@ namespace EF.Entity
             _childEntityIndices.Clear();
             _parentEntityIndices.Clear();
             _entityUpdateQueue?.Clear();
+            _entityFixedUpdateQueue?.Clear();
 
             // 释放所有缓存的资源引用
             foreach (GameObject asset in _assetCache.Values)

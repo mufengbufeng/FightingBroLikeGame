@@ -140,6 +140,19 @@ public class GameEntry : MonoBehaviour
     }
 
     /// <summary>
+    /// 在物理帧中驱动实体系统，确保实体可与 Unity 物理系统同步。
+    /// </summary>
+    private void FixedUpdate()
+    {
+        if (!_moduleSystemUpdateEnabled)
+        {
+            return;
+        }
+
+        _entityManager?.FixedUpdate(Time.fixedDeltaTime);
+    }
+
+    /// <summary>
     /// 场景入口销毁时关闭全部模块，释放 W-Framework 的静态 UI 状态和资源句柄。
     /// </summary>
     private void OnDestroy()
