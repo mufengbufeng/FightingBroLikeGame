@@ -1,23 +1,29 @@
 ﻿<Solution>
+  <Project Path="com.tencent.puerts.core.csproj" />
   <Project Path="LitMotion.csproj" />
   <Project Path="SingularityGroup.HotReload.Editor.csproj" />
   <Project Path="YooAsset.csproj" />
   <Project Path="YooAsset.Editor.csproj" />
   <Project Path="UnitySkills.Editor.csproj" />
+  <Project Path="com.tencent.puerts.core.Editor.csproj" />
   <Project Path="EF.Monetization.Wechat.csproj" />
   <Project Path="EF.Runtime.csproj" />
   <Project Path="GameLogic.Tests.EditMode.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="SingularityGroup.HotReload.Runtime.csproj" />
   <Project Path="EF.Resource.BackgroundDownload.csproj" />
+  <Project Path="PuertsUnityMcp.Editor.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="GameLogic.csproj" />
   <Project Path="UnitySkills.Tests.Editor.csproj" />
+  <Project Path="PuertsUnityMcp.Runtime.csproj" />
   <Project Path="SingularityGroup.HotReload.Runtime.Public.csproj" />
   <Project Path="LitMotion.Extensions.csproj" />
   <Project Path="GameLogic.Tests.PlayMode.csproj" />
   <Project Path="LitMotion.Editor.csproj" />
+  <Project Path="com.tencent.puerts.v8.Editor.csproj" />
   <Project Path="ImageToUIPrefabBuilder.Editor.csproj" />
+  <Project Path="com.tencent.puerts.v8.csproj" />
   <Project Path="YooAsset.MiniGame.csproj" />
   <Project Path="GameProto.csproj" />
 </Solution>
