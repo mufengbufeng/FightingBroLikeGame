@@ -1,0 +1,17 @@
+{
+  "servers": {
+    "omnisharp": {
+      "args": [
+        "-z",
+        "--hostPID",
+        "$PID",
+        "--encoding",
+        "utf-8",
+        "--languageserver",
+        "--source",
+        "UnityProject"
+      ],
+      "rootMarkers": [".git"]
+    }
+  }
+}
