@@ -200,7 +200,8 @@ namespace GameLogic
             {
                 _procedureManager.Initialize(
                     _fsmManager,
-                    new InitProcedure());
+                    new InitProcedure(),
+                    new MainWindowProcedure());
                 _procedureManager.StartProcedure<InitProcedure>();
                 Log.Info("[GameLogicEntry] 流程管理器启动完成。");
             }

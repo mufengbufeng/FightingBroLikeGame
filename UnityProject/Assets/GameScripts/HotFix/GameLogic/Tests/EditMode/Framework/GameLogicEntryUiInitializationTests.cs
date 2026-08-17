@@ -46,6 +46,37 @@ namespace GameLogic.Tests
             StringAssert.DoesNotContain("WFrameworkUIRootBindings", scene);
         }
 
+        /// <summary>
+        /// MainWindow 必须由独立流程通过 W-Framework UI 管理器打开和关闭。
+        /// </summary>
+        [Test]
+        public void MainWindowProcedure_源码契约_通过WFramework管理器维护窗口()
+        {
+            string initProcedure = File.ReadAllText(GetInitProcedurePath());
+            string entry = File.ReadAllText(GetGameLogicEntryPath());
+
+            StringAssert.Contains("new MainWindowProcedure()", entry);
+            StringAssert.Contains("ChangeState<MainWindowProcedure>(procedureOwner);", initProcedure);
+            StringAssert.Contains("IWFrameworkUIManager uiManager = GameLogicEntry.WFrameworkUI;", initProcedure);
+            StringAssert.Contains("uiManager.Open(MainWindowId)", initProcedure);
+            StringAssert.Contains("uiManager.CloseGroup(MainWindowId)", initProcedure);
+        }
+
+        private static string GetInitProcedurePath()
+        {
+            return Path.Combine(
+                TestContext.CurrentContext.TestDirectory,
+                "..",
+                "..",
+                "Assets",
+                "GameScripts",
+                "HotFix",
+                "GameLogic",
+                "Procedure",
+                "Main",
+                "InitProcedure.cs");
+        }
+
         private static string GetGameLogicEntryPath()
         {
             return Path.Combine(
