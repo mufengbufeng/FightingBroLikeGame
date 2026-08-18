@@ -1,13 +1,11 @@
 {
   "dependencies": {
-    "puerts-unity-mcp": "file:../puerts-unity-mcp/Packages/puerts-unity-mcp",
-    "com.tencent.puerts.core": "file:../puerts-unity-mcp/third_party/puerts/unity/upms/core",
-    "com.tencent.puerts.v8": "file:../puerts-unity-mcp/third_party/puerts/unity/upms/v8",
     "com.besty.unity-skills": "file:com.besty.unity-skills",
     "com.code-philosophy.hybridclr": "https://github.com/focus-creative-games/hybridclr_unity.git#e4def761d69b27b7b51a5de0f6d272861416a2d6",
     "com.code-philosophy.luban": "https://github.com/focus-creative-games/luban_unity.git",
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
-    "com.qq.weixin.minigame": "https://github.com/wechat-miniprogram/minigame-tuanjie-transform-sdk.git#ed4ad28f433c6b52b5fd3f22a6fa155a0c98c228",
+    "com.tencent.puerts.core": "file:../puerts-unity-mcp/third_party/puerts/unity/upms/core",
+    "com.tencent.puerts.v8": "file:../puerts-unity-mcp/third_party/puerts/unity/upms/v8",
     "com.tuyoogame.yooasset": "file:./com.tuyoogame.yooasset",
     "com.unity.2d.animation": "13.0.4",
     "com.unity.2d.common": "12.0.2",
@@ -43,6 +41,7 @@
     "com.unity.ugui": "2.0.0",
     "com.unity.visualscripting": "1.9.11",
     "me.xw.image-to-ui": "file:me.xw.image-to-ui",
+    "puerts-unity-mcp": "file:../puerts-unity-mcp/Packages/puerts-unity-mcp",
     "com.unity.modules.accessibility": "1.0.0",
     "com.unity.modules.adaptiveperformance": "1.0.0",
     "com.unity.modules.ai": "1.0.0",

@@ -30,13 +30,6 @@
       "dependencies": {},
       "hash": "64285ae060c9fe2aeb2a73b076b160939ce3be1a"
     },
-    "com.qq.weixin.minigame": {
-      "version": "https://github.com/wechat-miniprogram/minigame-tuanjie-transform-sdk.git#ed4ad28f433c6b52b5fd3f22a6fa155a0c98c228",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "ed4ad28f433c6b52b5fd3f22a6fa155a0c98c228"
-    },
     "com.singularitygroup.hotreload": {
       "version": "file:com.singularitygroup.hotreload",
       "depth": 0,
@@ -58,20 +51,6 @@
       "source": "local",
       "dependencies": {
         "com.tencent.puerts.core": "3.0.2"
-      }
-    },
-    "puerts-unity-mcp": {
-      "version": "file:../puerts-unity-mcp/Packages/puerts-unity-mcp",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {
-        "com.tencent.puerts.core": "3.0.2",
-        "com.tencent.puerts.v8": "3.0.2",
-        "com.unity.ugui": "1.0.0",
-        "com.unity.modules.imageconversion": "1.0.0",
-        "com.unity.modules.physics": "1.0.0",
-        "com.unity.modules.screencapture": "1.0.0",
-        "com.unity.modules.unitywebrequest": "1.0.0"
       }
     },
     "com.tuyoogame.yooasset": {
@@ -547,6 +526,20 @@
       "dependencies": {
         "com.unity.ugui": "2.0.0",
         "com.unity.nuget.newtonsoft-json": "3.2.1"
+      }
+    },
+    "puerts-unity-mcp": {
+      "version": "file:../puerts-unity-mcp/Packages/puerts-unity-mcp",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.tencent.puerts.core": "3.0.2",
+        "com.tencent.puerts.v8": "3.0.2",
+        "com.unity.ugui": "1.0.0",
+        "com.unity.modules.imageconversion": "1.0.0",
+        "com.unity.modules.physics": "1.0.0",
+        "com.unity.modules.screencapture": "1.0.0",
+        "com.unity.modules.unitywebrequest": "1.0.0"
       }
     },
     "com.unity.modules.accessibility": {
