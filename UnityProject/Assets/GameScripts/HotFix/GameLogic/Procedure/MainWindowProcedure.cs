@@ -6,49 +6,6 @@ using ProcedureOwner = EF.Fsm.IFsm<EF.Procedure.IProcedureManager>;
 namespace GameLogic
 {
     /// <summary>
-    /// 初始化流程。
-    /// </summary>
-    public class InitProcedure : ProcedureBase
-    {
-        /// <summary>
-        /// 初始化流程实例。
-        /// </summary>
-        protected override void OnInit(ProcedureOwner procedureOwner)
-        {
-            base.OnInit(procedureOwner);
-            Log.Info("[InitProcedure] OnInit");
-        }
-
-        /// <summary>
-        /// 进入初始化流程。
-        /// </summary>
-        protected override void OnEnter(ProcedureOwner procedureOwner)
-        {
-            base.OnEnter(procedureOwner);
-            Log.Info("[InitProcedure] 初始化完成，进入 MainWindowProcedure。");
-            ChangeState<MainWindowProcedure>(procedureOwner);
-        }
-
-        /// <summary>
-        /// 离开初始化流程。
-        /// </summary>
-        protected override void OnLeave(ProcedureOwner procedureOwner, bool isShutdown)
-        {
-            base.OnLeave(procedureOwner, isShutdown);
-            Log.Info("[InitProcedure] OnLeave");
-        }
-
-        /// <summary>
-        /// 销毁初始化流程。
-        /// </summary>
-        protected override void OnDestroy(ProcedureOwner procedureOwner)
-        {
-            base.OnDestroy(procedureOwner);
-            Log.Info("[InitProcedure] OnDestroy");
-        }
-    }
-
-    /// <summary>
     /// 主窗口流程，负责在初始化完成后打开并维护 MainWindow。
     /// </summary>
     public sealed class MainWindowProcedure : ProcedureBase

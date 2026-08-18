@@ -52,17 +52,17 @@ namespace GameLogic.Tests
         [Test]
         public void MainWindowProcedure_源码契约_通过WFramework管理器维护窗口()
         {
-            string initProcedure = File.ReadAllText(GetInitProcedurePath());
+            string mainWindowProcedure = File.ReadAllText(GetMainWindowProcedurePath());
             string entry = File.ReadAllText(GetGameLogicEntryPath());
 
             StringAssert.Contains("new MainWindowProcedure()", entry);
             StringAssert.Contains("new GamePlayProcedure()", entry);
-            StringAssert.Contains("IWFrameworkUIManager uiManager = GameLogicEntry.WFrameworkUI;", initProcedure);
-            StringAssert.Contains("uiManager.Open(MainWindowId)", initProcedure);
-            StringAssert.Contains("uiManager.CloseGroup(MainWindowId)", initProcedure);
+            StringAssert.Contains("IWFrameworkUIManager uiManager = GameLogicEntry.WFrameworkUI;", mainWindowProcedure);
+            StringAssert.Contains("uiManager.Open(MainWindowId)", mainWindowProcedure);
+            StringAssert.Contains("uiManager.CloseGroup(MainWindowId)", mainWindowProcedure);
         }
 
-        private static string GetInitProcedurePath()
+        private static string GetMainWindowProcedurePath()
         {
             return Path.Combine(
                 TestContext.CurrentContext.TestDirectory,
@@ -73,8 +73,7 @@ namespace GameLogic.Tests
                 "HotFix",
                 "GameLogic",
                 "Procedure",
-                "Main",
-                "InitProcedure.cs");
+                "MainWindowProcedure.cs");
         }
 
         private static string GetGameLogicEntryPath()
