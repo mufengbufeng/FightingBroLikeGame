@@ -165,8 +165,7 @@ namespace GameLogic.GamePlay
             _playerEntityId = playerEntityId;
             var spawnData = new PlayerEntitySpawnData(
                 playerSpawn.position,
-                playerSpawn.rotation,
-                playerSpawn.lossyScale);
+                playerSpawn.rotation);
 
             try
             {

@@ -20,7 +20,7 @@ namespace GameLogic.GamePlay
     {
         public Vector2 Move;
         public bool JumpPressed;
-        public bool JumpReleased;
+        public bool JumpHeld;
         public bool DashPressed;
     }
 
@@ -31,6 +31,9 @@ namespace GameLogic.GamePlay
     {
         public bool Grounded;
         public bool OnLadder;
+        public bool CeilingHit;
+        public bool TouchingWallLeft;
+        public bool TouchingWallRight;
     }
 
     /// <summary>
@@ -39,10 +42,11 @@ namespace GameLogic.GamePlay
     public sealed class PlayerMotorConfig
     {
         public float MoveSpeed = 6f;
-        public float JumpVelocity = 10f;
-        public float Gravity = 28f;
-        public float JumpCutMultiplier = 0.45f;
-        public float CoyoteTime = 0.08f;
+        public float JumpVelocity = 11.5f;
+        public float RiseGravity = 34.8f;
+        public float JumpReleaseGravity = 90f;
+        public float FallGravity = 51f;
+        public float CoyoteTime = 0.12f;
         public float JumpBuffer = 0.10f;
         public float DashSpeed = 16f;
         public float DashDuration = 0.15f;
@@ -119,31 +123,67 @@ namespace GameLogic.GamePlay
             UpdateJumpBuffer(deltaTime, input.JumpPressed);
             UpdateDashCooldown(deltaTime);
 
-            if (currentState == PlayerMoveState.Dashing)
-            {
-                _dashRemaining -= deltaTime;
-                if (_dashRemaining > 0f)
-                {
-                    Velocity = new Vector2(Facing * _config.DashSpeed, 0f);
-                    return PlayerMoveState.Dashing;
-                }
+            bool forceFall = false;
+            bool blockJump = contacts.CeilingHit;
+            bool movingTowardsWall = IsMovingTowardsWall(input, contacts);
+            bool dashHitsWall = currentState == PlayerMoveState.Dashing
+                && IsTouchingWall(Facing, contacts);
 
-                _dashCooldownRemaining = _config.DashCooldown;
-                currentState = contacts.Grounded ? PlayerMoveState.Grounded : PlayerMoveState.Airborne;
+            if (contacts.CeilingHit && Velocity.y > 0f)
+            {
+                Velocity = new Vector2(Velocity.x, 0f);
+                forceFall = true;
             }
 
-            if (TryStartDash(input, contacts))
+            if (movingTowardsWall)
+            {
+                Velocity = new Vector2(0f, Velocity.y);
+                if (!contacts.Grounded && Velocity.y > 0f)
+                {
+                    Velocity = new Vector2(0f, 0f);
+                    forceFall = true;
+                    blockJump = true;
+                }
+            }
+
+            if (currentState == PlayerMoveState.Dashing)
+            {
+                if (dashHitsWall)
+                {
+                    _dashRemaining = 0f;
+                    _dashCooldownRemaining = _config.DashCooldown;
+                    Velocity = new Vector2(0f, Velocity.y);
+                    currentState = contacts.Grounded ? PlayerMoveState.Grounded : PlayerMoveState.Airborne;
+                    forceFall = true;
+                    blockJump = true;
+
+                }
+                else
+                {
+                    _dashRemaining -= deltaTime;
+                    if (_dashRemaining > 0f)
+                    {
+                        Velocity = new Vector2(Facing * _config.DashSpeed, 0f);
+                        return PlayerMoveState.Dashing;
+                    }
+
+                    _dashCooldownRemaining = _config.DashCooldown;
+                    currentState = contacts.Grounded ? PlayerMoveState.Grounded : PlayerMoveState.Airborne;
+                }
+            }
+
+            if (!forceFall && TryStartDash(input, contacts))
             {
                 return PlayerMoveState.Dashing;
             }
 
-            if (currentState == PlayerMoveState.Climbing || WantsClimb(input, contacts))
+            if (!forceFall && (currentState == PlayerMoveState.Climbing || WantsClimb(input, contacts)))
             {
                 if (!contacts.OnLadder)
                 {
                     currentState = contacts.Grounded ? PlayerMoveState.Grounded : PlayerMoveState.Airborne;
                 }
-                else if (input.JumpPressed)
+                else if (input.JumpPressed && !blockJump)
                 {
                     Velocity = new Vector2(ResolveHorizontal(input.Move.x), _config.JumpVelocity);
                     _coyoteRemaining = 0f;
@@ -159,13 +199,12 @@ namespace GameLogic.GamePlay
                 }
             }
 
-            bool jumped = TryJump(input, contacts, currentState);
-            ApplyHorizontal(input);
-            bool jumpCut = ApplyJumpCut(input);
+            bool jumped = !blockJump && TryJump(input, contacts, currentState);
+            ApplyHorizontal(input, movingTowardsWall || dashHitsWall);
 
-            if (!jumped && !jumpCut)
+            if (!jumped)
             {
-                ApplyGravity(deltaTime, contacts);
+                ApplyGravity(deltaTime, contacts, input.JumpHeld, forceFall);
             }
 
             return jumped || !contacts.Grounded
@@ -216,15 +255,15 @@ namespace GameLogic.GamePlay
                 return false;
             }
 
-            if (Mathf.Abs(input.Move.x) >= MoveDeadZone)
+            int dashDirection = Mathf.Abs(input.Move.x) >= MoveDeadZone
+                ? (input.Move.x > 0f ? 1 : -1)
+                : (Facing == 0 ? 1 : Facing);
+            if (IsTouchingWall(dashDirection, contacts))
             {
-                Facing = input.Move.x > 0f ? 1 : -1;
-            }
-            else if (Facing == 0)
-            {
-                Facing = 1;
+                return false;
             }
 
+            Facing = dashDirection;
             Velocity = new Vector2(Facing * _config.DashSpeed, 0f);
             _dashRemaining = _config.DashDuration;
             if (!contacts.Grounded)
@@ -260,7 +299,7 @@ namespace GameLogic.GamePlay
             return true;
         }
 
-        private void ApplyHorizontal(PlayerMotorInput input)
+        private void ApplyHorizontal(PlayerMotorInput input, bool blockedByWall)
         {
             float moveX = ResolveHorizontal(input.Move.x);
             if (Mathf.Abs(moveX) >= MoveDeadZone)
@@ -268,12 +307,20 @@ namespace GameLogic.GamePlay
                 Facing = moveX > 0f ? 1 : -1;
             }
 
-            Velocity = new Vector2(moveX * _config.MoveSpeed, Velocity.y);
+            float horizontal = blockedByWall ? 0f : moveX * _config.MoveSpeed;
+            Velocity = new Vector2(horizontal, Velocity.y);
         }
 
-        private void ApplyGravity(float deltaTime, PlayerMotorContacts contacts)
+        private void ApplyGravity(
+            float deltaTime,
+            PlayerMotorContacts contacts,
+            bool jumpHeld,
+            bool forceFall)
         {
-            float vertical = Velocity.y - _config.Gravity * deltaTime;
+            float gravity = forceFall || Velocity.y <= 0f
+                ? _config.FallGravity
+                : (jumpHeld ? _config.RiseGravity : _config.JumpReleaseGravity);
+            float vertical = Velocity.y - gravity * deltaTime;
             if (contacts.Grounded && vertical < 0f)
             {
                 vertical = 0f;
@@ -282,15 +329,18 @@ namespace GameLogic.GamePlay
             Velocity = new Vector2(Velocity.x, vertical);
         }
 
-        private bool ApplyJumpCut(PlayerMotorInput input)
+        private bool IsMovingTowardsWall(PlayerMotorInput input, PlayerMotorContacts contacts)
         {
-            if (!input.JumpReleased || Velocity.y <= 0f)
-            {
-                return false;
-            }
+            float movement = input.Move.x != 0f ? input.Move.x : Velocity.x;
+            return (movement < 0f && contacts.TouchingWallLeft)
+                || (movement > 0f && contacts.TouchingWallRight);
+        }
 
-            Velocity = new Vector2(Velocity.x, Velocity.y * _config.JumpCutMultiplier);
-            return true;
+        private static bool IsTouchingWall(int direction, PlayerMotorContacts contacts)
+        {
+            return direction < 0
+                ? contacts.TouchingWallLeft
+                : contacts.TouchingWallRight;
         }
 
         private static float ResolveHorizontal(float moveX)

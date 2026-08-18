@@ -34,11 +34,21 @@ namespace GameLogic.Tests
             PlayerMoveState state = motor.Tick(
                 DeltaTime,
                 PlayerMoveState.Airborne,
-                new PlayerMotorInput { JumpPressed = true },
+                new PlayerMotorInput { JumpPressed = true, JumpHeld = true },
                 new PlayerMotorContacts { Grounded = true });
 
-            Assert.That(motor.Velocity.y, Is.EqualTo(10f));
+            Assert.That(motor.Velocity.y, Is.EqualTo(11.5f));
             Assert.That(state, Is.EqualTo(PlayerMoveState.Airborne));
+        }
+
+        [Test]
+        public void 满按跳跃_轨迹符合默认数值()
+        {
+            MeasureFullJumpTrajectory(out float peakHeight, out float peakTime, out float descentDuration);
+
+            Assert.That(peakHeight, Is.InRange(1.90f, 2.10f));
+            Assert.That(peakTime, Is.InRange(0.34f, 0.38f));
+            Assert.That(descentDuration, Is.InRange(0.26f, 0.30f));
         }
 
         [Test]
@@ -50,14 +60,14 @@ namespace GameLogic.Tests
                 PlayerMoveState.Airborne,
                 default,
                 new PlayerMotorContacts { Grounded = true });
-            state = TickFor(motor, state, 0.04f, default, new PlayerMotorContacts { Grounded = false });
+            state = TickFor(motor, state, 0.119f, default, default);
             state = motor.Tick(
-                DeltaTime,
+                0f,
                 state,
-                new PlayerMotorInput { JumpPressed = true },
-                new PlayerMotorContacts { Grounded = false });
+                new PlayerMotorInput { JumpPressed = true, JumpHeld = true },
+                default);
 
-            Assert.That(motor.Velocity.y, Is.EqualTo(10f));
+            Assert.That(motor.Velocity.y, Is.EqualTo(11.5f));
             Assert.That(state, Is.EqualTo(PlayerMoveState.Airborne));
         }
 
@@ -70,35 +80,64 @@ namespace GameLogic.Tests
                 PlayerMoveState.Airborne,
                 default,
                 new PlayerMotorContacts { Grounded = true });
-            state = TickFor(motor, state, 0.10f, default, new PlayerMotorContacts { Grounded = false });
+            state = TickFor(motor, state, 0.121f, default, default);
             state = motor.Tick(
-                DeltaTime,
+                0f,
                 state,
-                new PlayerMotorInput { JumpPressed = true },
-                new PlayerMotorContacts { Grounded = false });
+                new PlayerMotorInput { JumpPressed = true, JumpHeld = true },
+                default);
 
-            Assert.That(motor.Velocity.y, Is.Not.EqualTo(10f));
+            Assert.That(motor.Velocity.y, Is.Not.EqualTo(11.5f));
             Assert.That(state, Is.EqualTo(PlayerMoveState.Airborne));
         }
 
         [Test]
-        public void 空中松跳_截断上升速度()
+        public void 空中松开跳跃_使用松开重力()
         {
             var motor = new PlayerMotor();
             PlayerMoveState state = motor.Tick(
                 DeltaTime,
                 PlayerMoveState.Airborne,
-                new PlayerMotorInput { JumpPressed = true },
+                new PlayerMotorInput { JumpPressed = true, JumpHeld = true },
                 new PlayerMotorContacts { Grounded = true });
-            float risingVelocity = motor.Velocity.y;
 
             state = motor.Tick(
                 DeltaTime,
                 state,
-                new PlayerMotorInput { JumpReleased = true },
-                new PlayerMotorContacts { Grounded = false });
+                default,
+                default);
 
-            Assert.That(motor.Velocity.y, Is.EqualTo(risingVelocity * 0.45f).Within(0.0001f));
+            Assert.That(motor.Velocity.y, Is.EqualTo(9.7f).Within(0.0001f));
+        }
+
+        [Test]
+        public void 空中按住跳跃_使用上升重力()
+        {
+            var motor = new PlayerMotor();
+            PlayerMoveState state = motor.Tick(
+                DeltaTime,
+                PlayerMoveState.Airborne,
+                new PlayerMotorInput { JumpPressed = true, JumpHeld = true },
+                new PlayerMotorContacts { Grounded = true });
+
+            state = motor.Tick(
+                DeltaTime,
+                state,
+                new PlayerMotorInput { JumpHeld = true },
+                default);
+
+            Assert.That(motor.Velocity.y, Is.EqualTo(10.804f).Within(0.0001f));
+        }
+
+        [Test]
+        public void 下落时_使用下落重力()
+        {
+            var motor = new PlayerMotor();
+            motor.Reset(new Vector2(0f, -0.5f));
+
+            motor.Tick(DeltaTime, PlayerMoveState.Airborne, default, default);
+
+            Assert.That(motor.Velocity.y, Is.EqualTo(-1.52f).Within(0.0001f));
         }
 
         [Test]
@@ -203,9 +242,127 @@ namespace GameLogic.Tests
                 new PlayerMotorContacts { OnLadder = true });
 
             Assert.That(state, Is.Not.EqualTo(PlayerMoveState.Climbing));
-            Assert.That(motor.Velocity.y, Is.EqualTo(10f));
+            Assert.That(motor.Velocity.y, Is.EqualTo(11.5f));
         }
 
+        [Test]
+        public void 顶头时_立即进入下落()
+        {
+            var motor = new PlayerMotor();
+            motor.Reset(new Vector2(0f, 2f));
+
+            PlayerMoveState state = motor.Tick(
+                DeltaTime,
+                PlayerMoveState.Airborne,
+                default,
+                new PlayerMotorContacts { CeilingHit = true });
+
+            Assert.That(state, Is.EqualTo(PlayerMoveState.Airborne));
+            Assert.That(motor.Velocity.y, Is.EqualTo(-1.02f).Within(0.0001f));
+        }
+
+        [Test]
+        public void 空中向右撞墙_停止水平移动且可反向离墙()
+        {
+            var motor = new PlayerMotor();
+            motor.Reset(new Vector2(6f, 2f));
+
+            PlayerMoveState state = motor.Tick(
+                DeltaTime,
+                PlayerMoveState.Airborne,
+                new PlayerMotorInput { Move = Vector2.right },
+                new PlayerMotorContacts { TouchingWallRight = true });
+
+            Assert.That(motor.Velocity.x, Is.Zero);
+            Assert.That(motor.Velocity.y, Is.EqualTo(-1.02f).Within(0.0001f));
+
+            motor.Tick(
+                DeltaTime,
+                state,
+                new PlayerMotorInput { Move = Vector2.left },
+                new PlayerMotorContacts { TouchingWallRight = true });
+
+            Assert.That(motor.Velocity.x, Is.EqualTo(-6f));
+        }
+
+        [Test]
+        public void 空中冲刺撞墙_停止冲刺且进入冷却()
+        {
+            var motor = new PlayerMotor();
+            PlayerMoveState state = motor.Tick(
+                DeltaTime,
+                PlayerMoveState.Airborne,
+                default,
+                new PlayerMotorContacts { Grounded = true });
+            state = motor.Tick(DeltaTime, state, default, default);
+            state = motor.Tick(
+                DeltaTime,
+                state,
+                new PlayerMotorInput { DashPressed = true },
+                default);
+
+            Assert.That(state, Is.EqualTo(PlayerMoveState.Dashing));
+
+            state = motor.Tick(
+                DeltaTime,
+                state,
+                new PlayerMotorInput { Move = Vector2.left, JumpPressed = true },
+                new PlayerMotorContacts { TouchingWallRight = true });
+
+            Assert.That(state, Is.EqualTo(PlayerMoveState.Airborne));
+            Assert.That(motor.Velocity.x, Is.Zero);
+            Assert.That(motor.Velocity.y, Is.EqualTo(-1.02f).Within(0.0001f));
+
+            state = motor.Tick(
+                DeltaTime,
+                state,
+                new PlayerMotorInput { DashPressed = true },
+                default);
+
+            Assert.That(state, Is.Not.EqualTo(PlayerMoveState.Dashing));
+        }
+
+        private static void MeasureFullJumpTrajectory(
+            out float peakHeight,
+            out float peakTime,
+            out float descentDuration)
+        {
+            var motor = new PlayerMotor();
+            PlayerMoveState state = motor.Tick(
+                DeltaTime,
+                PlayerMoveState.Airborne,
+                new PlayerMotorInput { JumpPressed = true, JumpHeld = true },
+                new PlayerMotorContacts { Grounded = true });
+            float height = motor.Velocity.y * DeltaTime;
+            float elapsed = DeltaTime;
+            peakHeight = height;
+            peakTime = elapsed;
+            descentDuration = 0f;
+
+            for (int i = 0; i < 100; i++)
+            {
+                state = motor.Tick(
+                    DeltaTime,
+                    state,
+                    new PlayerMotorInput { JumpHeld = true },
+                    default);
+                elapsed += DeltaTime;
+                height += motor.Velocity.y * DeltaTime;
+                if (height > peakHeight)
+                {
+                    peakHeight = height;
+                    peakTime = elapsed;
+                }
+
+                if (elapsed > peakTime && height <= 0f)
+                {
+                    descentDuration = elapsed - peakTime;
+                    return;
+                }
+            }
+
+            Assert.Fail("跳跃未在预期时间内回到起跳高度。");
+        }
         private static PlayerMoveState TickFor(
             PlayerMotor motor,
             PlayerMoveState state,

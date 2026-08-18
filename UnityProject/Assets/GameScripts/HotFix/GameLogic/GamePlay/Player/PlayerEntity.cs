@@ -16,12 +16,10 @@ namespace GameLogic.GamePlay
         /// </summary>
         /// <param name="position">玩家世界坐标。</param>
         /// <param name="rotation">玩家世界旋转。</param>
-        /// <param name="scale">玩家本地缩放。</param>
-        public PlayerEntitySpawnData(Vector3 position, Quaternion rotation, Vector3 scale)
+        public PlayerEntitySpawnData(Vector3 position, Quaternion rotation)
         {
             Position = position;
             Rotation = rotation;
-            Scale = scale;
         }
 
         /// <summary>
@@ -33,11 +31,6 @@ namespace GameLogic.GamePlay
         /// 玩家世界旋转。
         /// </summary>
         public Quaternion Rotation { get; }
-
-        /// <summary>
-        /// 玩家本地缩放。
-        /// </summary>
-        public Vector3 Scale { get; }
     }
 
     /// <summary>
@@ -56,9 +49,12 @@ namespace GameLogic.GamePlay
         public const string AssetName = "GamePlayPlayer_01";
 
         private const string MovementFsmNamePrefix = "PlayerMovement.";
+        private const float ContactNormalAxisThreshold = 0.7f;
+
 
         private static readonly Vector2 GroundCheckSize = new Vector2(0.55f, 0.12f);
         private static readonly Vector2 GroundCheckOffset = new Vector2(0f, -0.82f);
+
         private static readonly ContactFilter2D GroundFilter = new ContactFilter2D
         {
             useTriggers = false,
@@ -73,18 +69,23 @@ namespace GameLogic.GamePlay
         };
 
         private readonly PlayerMotor _motor = new PlayerMotor();
-        private readonly Collider2D[] _overlapHits = new Collider2D[8];
+        private readonly Collider2D[] _overlapHits = new Collider2D[16];
+        private readonly ContactPoint2D[] _contactHits = new ContactPoint2D[16];
+
 
         private GameObject _handle;
         private Rigidbody2D _body;
         private CapsuleCollider2D _capsule;
+        private SpriteRenderer _spriteRenderer;
+        private PlayerFootCatchSettings _footCatchSettings;
+        private PlatformFootCatchConfig _footCatchConfig;
+
         private InputActionMap _playerMap;
         private InputAction _moveAction;
         private InputAction _jumpAction;
         private InputAction _dashAction;
         private Vector2 _move;
         private bool _jumpPressed;
-        private bool _jumpReleased;
         private bool _dashPressed;
         private bool _inputReady;
         private IFsmManager _fsmManager;
@@ -120,11 +121,20 @@ namespace GameLogic.GamePlay
             {
                 Transform playerTransform = Handle.transform;
                 playerTransform.SetPositionAndRotation(spawnData.Position, spawnData.Rotation);
-                playerTransform.localScale = spawnData.Scale;
             }
 
             _body = Handle.GetComponent<Rigidbody2D>();
             _capsule = Handle.GetComponent<CapsuleCollider2D>();
+            _spriteRenderer = Handle.GetComponent<SpriteRenderer>();
+            _footCatchSettings = Handle.GetComponent<PlayerFootCatchSettings>();
+            _footCatchConfig = _footCatchSettings != null
+                ? _footCatchSettings.CreateConfig()
+                : default;
+            if (_footCatchSettings == null)
+            {
+                Log.Error("[PlayerEntity] 玩家预制体缺少 PlayerFootCatchSettings。");
+            }
+
             Handle.SetActive(true);
             _motor.Reset(Vector2.zero);
             InitializeMovementFsm();
@@ -143,7 +153,6 @@ namespace GameLogic.GamePlay
             DisableInput();
             _move = Vector2.zero;
             _jumpPressed = false;
-            _jumpReleased = false;
             _dashPressed = false;
 
             if (_body != null)
@@ -164,6 +173,7 @@ namespace GameLogic.GamePlay
         {
             _body = null;
             _capsule = null;
+            _spriteRenderer = null;
             DestroyMovementFsm();
         }
 
@@ -183,7 +193,6 @@ namespace GameLogic.GamePlay
 
             _move = _moveAction != null ? _moveAction.ReadValue<Vector2>() : Vector2.zero;
             _jumpPressed |= _jumpAction != null && _jumpAction.WasPressedThisFrame();
-            _jumpReleased |= _jumpAction != null && _jumpAction.WasReleasedThisFrame();
             _dashPressed |= _dashAction != null && _dashAction.WasPressedThisFrame();
         }
 
@@ -202,11 +211,10 @@ namespace GameLogic.GamePlay
             {
                 Move = _inputReady ? _move : Vector2.zero,
                 JumpPressed = _inputReady && _jumpPressed,
-                JumpReleased = _inputReady && _jumpReleased,
+                JumpHeld = _inputReady && _jumpAction != null && _jumpAction.IsPressed(),
                 DashPressed = _inputReady && _dashPressed
             };
             _jumpPressed = false;
-            _jumpReleased = false;
             _dashPressed = false;
 
             var contacts = new PlayerMotorContacts
@@ -214,16 +222,21 @@ namespace GameLogic.GamePlay
                 Grounded = IsGrounded(),
                 OnLadder = IsOnLadder()
             };
+            CollectMotorContacts(ref contacts);
+            if (MovementState == PlayerMoveState.Airborne)
+            {
+                TrySnapToPlatformLedge(in input, ref contacts);
+            }
+
+
 
             PlayerMoveState nextState = _motor.Tick(fixedDeltaTime, MovementState, input, contacts);
             ChangeMovementState(nextState);
             _body.linearVelocity = _motor.Velocity;
 
-            if (_motor.Facing != 0)
+            if (_motor.Facing != 0 && _spriteRenderer != null)
             {
-                Vector3 scale = Handle.transform.localScale;
-                scale.x = _motor.Facing * Mathf.Abs(scale.x);
-                Handle.transform.localScale = scale;
+                _spriteRenderer.flipX = _motor.Facing < 0;
             }
         }
 
@@ -277,7 +290,11 @@ namespace GameLogic.GamePlay
             }
         }
 
-        private void SetMovementState(PlayerMoveState movementState)
+        /// <summary>
+        /// 由移动状态机同步当前移动状态。
+        /// </summary>
+        /// <param name="movementState">新激活的移动状态。</param>
+        internal void SetMovementState(PlayerMoveState movementState)
         {
             MovementState = movementState;
         }
@@ -322,7 +339,6 @@ namespace GameLogic.GamePlay
         {
             _move = Vector2.zero;
             _jumpPressed = false;
-            _jumpReleased = false;
             _dashPressed = false;
             _inputReady = false;
         }
@@ -339,6 +355,132 @@ namespace GameLogic.GamePlay
             _dashAction = null;
             _playerMap = null;
             _inputReady = false;
+        }
+
+        /// <summary>
+        /// 将脚部卡在标记平台顶缘的空中玩家小幅校正到站立位置。
+        /// </summary>
+        /// <param name="input">本帧电机输入。</param>
+        /// <param name="contacts">成功时会更新为接地状态的电机接触结果。</param>
+        /// <returns>发生脚部卡边校正时为 true。</returns>
+        private bool TrySnapToPlatformLedge(in PlayerMotorInput input, ref PlayerMotorContacts contacts)
+        {
+            if (_footCatchSettings == null)
+            {
+                return false;
+            }
+
+            Bounds playerBounds = _capsule.bounds;
+            int hitCount = Physics2D.OverlapBox(
+                playerBounds.center,
+                new Vector2(playerBounds.size.x, playerBounds.size.y) + _footCatchConfig.QueryPadding,
+                0f,
+                GroundFilter,
+                _overlapHits);
+            if (hitCount >= _overlapHits.Length)
+            {
+                return false;
+            }
+
+            BoxCollider2D candidate = null;
+            Vector2 targetBoundsCenter = default;
+            float nearestHorizontalCorrection = float.PositiveInfinity;
+            float highestPlatformTop = float.NegativeInfinity;
+            for (int i = 0; i < hitCount; i++)
+            {
+                BoxCollider2D collider = _overlapHits[i] as BoxCollider2D;
+                if (collider == null || collider.isTrigger || collider.GetComponent<PlatformLedge>() == null)
+                {
+                    continue;
+                }
+
+                Bounds platformBounds = collider.bounds;
+                if (!PlatformLedgeResolver.TryResolveLanding(
+                        playerBounds,
+                        platformBounds,
+                        input.Move.x,
+                        in _footCatchConfig,
+                        out Vector2 resolvedTarget))
+                {
+                    continue;
+                }
+
+                float horizontalCorrection = Mathf.Abs(resolvedTarget.x - playerBounds.center.x);
+                if (horizontalCorrection < nearestHorizontalCorrection
+                    || (Mathf.Approximately(horizontalCorrection, nearestHorizontalCorrection)
+                        && platformBounds.max.y > highestPlatformTop))
+                {
+                    candidate = collider;
+                    targetBoundsCenter = resolvedTarget;
+                    nearestHorizontalCorrection = horizontalCorrection;
+                    highestPlatformTop = platformBounds.max.y;
+                }
+            }
+
+            if (candidate == null)
+            {
+                return false;
+            }
+
+            int blockingHitCount = Physics2D.OverlapCapsule(
+                targetBoundsCenter,
+                new Vector2(playerBounds.size.x, playerBounds.size.y),
+                _capsule.direction,
+                0f,
+                GroundFilter,
+                _overlapHits);
+            if (blockingHitCount >= _overlapHits.Length)
+            {
+                return false;
+            }
+
+            Transform playerTransform = Handle.transform;
+            for (int i = 0; i < blockingHitCount; i++)
+            {
+                Collider2D hit = _overlapHits[i];
+                if (hit != null
+                    && hit.transform != candidate.transform
+                    && hit.transform != playerTransform
+                    && !hit.transform.IsChildOf(playerTransform))
+                {
+                    return false;
+                }
+            }
+
+            Vector2 currentBoundsCenter = _capsule.bounds.center;
+            _body.position += targetBoundsCenter - currentBoundsCenter;
+            contacts.Grounded = true;
+            contacts.CeilingHit = false;
+            contacts.TouchingWallLeft = false;
+            contacts.TouchingWallRight = false;
+            return true;
+        }
+
+        /// <summary>
+        /// 将刚体的非触发物理接触投影为电机可消费的顶头和墙面状态。
+        /// </summary>
+        /// <param name="contacts">待补充的本帧电机接触结果。</param>
+        private void CollectMotorContacts(ref PlayerMotorContacts contacts)
+        {
+            Bounds bounds = _capsule.bounds;
+            Vector2 center = bounds.center;
+            int contactCount = _body.GetContacts(GroundFilter, _contactHits);
+            for (int i = 0; i < contactCount; i++)
+            {
+                ContactPoint2D contact = _contactHits[i];
+                if (contact.normal.y <= -ContactNormalAxisThreshold && contact.point.y > center.y)
+                {
+                    contacts.CeilingHit = true;
+                }
+                if (contact.normal.x >= ContactNormalAxisThreshold && contact.point.x < center.x)
+                {
+                    contacts.TouchingWallLeft = true;
+                }
+                else if (contact.normal.x <= -ContactNormalAxisThreshold && contact.point.x > center.x)
+                {
+                    contacts.TouchingWallRight = true;
+                }
+            }
         }
 
         private bool IsGrounded()
@@ -377,52 +519,6 @@ namespace GameLogic.GamePlay
             }
 
             return false;
-        }
-        private abstract class PlayerMovementFsmState : FsmState<PlayerEntity>
-        {
-            private readonly PlayerMoveState _movementState;
-
-            protected PlayerMovementFsmState(PlayerMoveState movementState)
-            {
-                _movementState = movementState;
-            }
-
-            protected override void OnEnter(IFsm<PlayerEntity> fsm)
-            {
-                fsm.Owner.SetMovementState(_movementState);
-            }
-        }
-
-        private sealed class PlayerGroundedFsmState : PlayerMovementFsmState
-        {
-            public PlayerGroundedFsmState()
-                : base(PlayerMoveState.Grounded)
-            {
-            }
-        }
-
-        private sealed class PlayerAirborneFsmState : PlayerMovementFsmState
-        {
-            public PlayerAirborneFsmState()
-                : base(PlayerMoveState.Airborne)
-            {
-            }
-        }
-
-        private sealed class PlayerDashingFsmState : PlayerMovementFsmState
-        {
-            public PlayerDashingFsmState()
-                : base(PlayerMoveState.Dashing)
-            {
-            }
-        }
-
-        private sealed class PlayerClimbingFsmState : PlayerMovementFsmState
-        {
-            public PlayerClimbingFsmState()
-                : base(PlayerMoveState.Climbing)
-            {
-            }
         }
     }
 }
