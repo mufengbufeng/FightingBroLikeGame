@@ -186,6 +186,19 @@ Unity 6000.3 (Unity 6) 游戏项目，使用 **EasyFramework (EF)** 自研模块
 - 自动更新失效场景 → MCP 进程未运行 / 改的扩展不在 `["cs"]` / 文件在 `skip_dirs` / 文件 > 50 MB → 需手动 reindex
 - 不能用于 → 写操作；Unity Editor 操作需在编辑器内完成
 
+### PuerTS Unity MCP（Unity Editor / Play Mode / Player）
+
+涉及 Unity Editor 状态、场景层级、UGUI、Play Mode 行为、运行中 Player/真机画面或性能的任务，优先使用项目已注册的 `puerts-unity-mcp`，避免依赖猜测或仅检查静态代码。
+
+- 前置检查 → 先调用 `mcp.info`、`editor.state` 和 `targets.list`；以 `tools/list` 返回的当前 endpoint 工具集为准。
+- Editor 自动化与检查 → 使用 `editor.js.eval`、`editor.hierarchy.get`、`editor.window.screenshot`；常规操作不生成 C#，避免不必要的 Domain Reload。
+- 运行时行为验证 → 在本地 Play Mode 或已明确配置的 Player/真机 target 上，使用 `runtime.status`、`runtime.js.eval`、`runtime.ui.snapshot`、`screen.screenshot` 或 `runtime.logs` 获取实际证据。
+- 性能验证 → 使用 `editor.profiler.targets.list` 确认采集目标，再用 `editor.profiler.capture` 或 `performance.hotspot.report`；报告会写入 `.puerts-unity-mcp/perf-reports`。
+- 编译或可能触发 Domain Reload 的操作 → 调用 `editor.compile` 后通过 `op.status` 等待并读取最终结果；不要将请求完成当作编译成功。
+- 不得在未经任务明确要求时修改场景、Prefab、ProjectSettings、Build Settings 或远程 Player；执行会改变状态的操作前后均应采集状态或截图作为证据。
+
+项目扩展位于 `puerts-unity-mcp-extension/`：Editor JS tools 放 `js/editor`，Runtime/Player JS tools 放 `js/runtime`，名称使用 `project.*`、`game.*` 或团队前缀，避免覆盖内置工具。
+
 ### Matt Pocock Skills（调试/TDD 辅助）
 
 | 想做的事 | 斜杠命令 |
