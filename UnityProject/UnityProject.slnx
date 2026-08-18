@@ -9,12 +9,12 @@
   <Project Path="EF.Monetization.Wechat.csproj" />
   <Project Path="EF.Runtime.csproj" />
   <Project Path="GameLogic.Tests.EditMode.csproj" />
+  <Project Path="GameLogic.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="SingularityGroup.HotReload.Runtime.csproj" />
   <Project Path="EF.Resource.BackgroundDownload.csproj" />
   <Project Path="PuertsUnityMcp.Editor.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
-  <Project Path="GameLogic.csproj" />
   <Project Path="UnitySkills.Tests.Editor.csproj" />
   <Project Path="PuertsUnityMcp.Runtime.csproj" />
   <Project Path="SingularityGroup.HotReload.Runtime.Public.csproj" />
